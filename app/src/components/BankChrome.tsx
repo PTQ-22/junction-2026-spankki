@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: C.paper,
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 8,
   },
   logoMark: {
     width: 32,

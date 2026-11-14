@@ -85,18 +85,17 @@ export function simViewBox(w: number, h: number): VB {
 }
 
 /** Embedded window (Etusivu inside the S-mobiili chrome): bottom-anchored
- * viewBox covering flower heads → below the pond, PLUS ~120 pt of sky above
- * the heads so the floating header's fade clears them. Falls back to VB_DEF
- * when the window is tall enough. */
+ * viewBox covering flower heads → below the pond, PLUS ~125 sky rows above
+ * the heads so the floating header's fade clears them. Fixed 390 wide so
+ * sprites render at the full painted size; falls back to VB_DEF when the
+ * window is tall enough. */
 export function embedViewBox(w: number, h: number): VB {
   const vhFit = Math.round((h * 390) / Math.max(1, w));
   if (vhFit >= 740) return VB_DEF;
-  // solve vh so heads (y=415) sit HEADROOM pt below the window top:
-  // heads_pt = (415 - yTop) * s, s = h/vh → vh = 300 / (1 - HEADROOM/h)
-  const headroom = 120;
-  const vh = Math.min(844, Math.round(300 / Math.max(0.4, 1 - headroom / Math.max(1, h))));
-  const vw = Math.max(390, Math.round((vh * w) / Math.max(1, h)));
-  return { x: (390 - vw) / 2, y: 715 - vh, w: vw, h: vh };
+  // vh rows: heads(415) → pond(715) is 300 + 125 sky for the header band;
+  // capped by the window's own fit so the pond never gets cropped
+  const vh = Math.min(425, vhFit);
+  return { x: 0, y: 715 - vh, w: 390, h: vh };
 }
 
 /** xMidYMid slice mapping for a given viewBox. */

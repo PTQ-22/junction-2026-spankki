@@ -510,12 +510,6 @@ export function HomeScreen() {
       <BankHeader />
 
       {/* accounts — mocked chrome, but the S-Tili balance is the real one */}
-      <View style={styles.sec}>
-        <Text style={styles.secLbl}>Tilit</Text>
-        <View style={styles.mockTag}>
-          <Text style={styles.mockTagTxt}>mock</Text>
-        </View>
-      </View>
       <View style={styles.acctCard}>
         <View style={styles.acctIcon}>
           <Ionicons name="wallet-outline" size={18} color="#FFFFFF" />
@@ -612,11 +606,6 @@ export function HomeScreen() {
         )}
       </View>
       </View>
-
-      {/* faint caption under the scene — the bank-nav pitch line */}
-      <Text style={styles.captionTxt} numberOfLines={1} adjustsFontSizeToFit>
-        Omat ostot → the flowers · Säästäjä → the pond
-      </Text>
 
       {/* bottom panel — flush on the tab bar */}
       {g && simMode ? (
@@ -813,32 +802,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: 6,
+    marginBottom: 6,
     gap: 8,
   },
-  secLbl: {
-    fontFamily: FONT.bold,
-    fontSize: 11.5,
-    color: C.sub,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  mockTag: {
-    borderWidth: 1,
-    borderColor: C.line,
-    borderRadius: 6,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  mockTagTxt: { fontFamily: FONT.semi, fontSize: 9, color: C.faint, textTransform: "uppercase" },
   acctCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: BANK, // the green account card, like S-mobiili's S-Etukortti card
     borderRadius: R.card,
     marginHorizontal: 16,
-    padding: 14,
+    marginTop: 6,
+    padding: 10,
     paddingRight: 62, // keep the balance clear of the dev-tools overlay at the right edge
     ...SHADOW,
   },
@@ -861,15 +836,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   coachPillTxt: { fontFamily: FONT.semi, fontSize: 10, color: C.spruce },
-  captionTxt: {
-    fontFamily: FONT.body,
-    fontSize: 10.5,
-    color: C.faint,
-    textAlign: "center",
-    paddingHorizontal: 12,
-    marginTop: 4,
-    marginBottom: 2,
-  },
   help: {
     position: "absolute",
     top: 10,
@@ -887,17 +853,17 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
     ...SHADOW,
   },
-  note: { fontFamily: FONT.semi, fontSize: 14, color: C.ink, lineHeight: 20 },
-  actions: { flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" },
+  note: { fontFamily: FONT.semi, fontSize: 14, color: C.ink, lineHeight: 19 },
+  actions: { flexDirection: "row", gap: 8, marginTop: 6, alignItems: "center" },
   cta: {
     flex: 1,
     backgroundColor: C.green,
     borderRadius: 12,
-    paddingVertical: 10,
+    paddingVertical: 9,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
@@ -906,23 +872,23 @@ const styles = StyleSheet.create({
   ctaTxt: { fontFamily: FONT.bold, fontSize: 14, color: "#FFFFFF" },
   ghost: { justifyContent: "center", paddingHorizontal: 10 },
   ghostTxt: { fontFamily: FONT.semi, fontSize: 13.5, color: C.spruce },
-  tiles: { flexDirection: "row", gap: 8, marginTop: 12 },
+  tiles: { flexDirection: "row", gap: 6, marginTop: 8 },
   tile: {
     flex: 1,
     backgroundColor: C.card,
     borderRadius: R.card,
-    padding: 10,
+    padding: 8,
     ...SHADOW,
   },
   tileLbl: {
     fontFamily: FONT.bold,
-    fontSize: 10,
+    fontSize: 9.5,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     color: C.faint,
   },
-  tileVal: { fontFamily: FONT.bold, fontSize: 16, color: C.ink, marginTop: 3, fontVariant: ["tabular-nums"] },
-  tileSub: { fontFamily: FONT.body, fontSize: 10.5, color: C.sub, marginTop: 1 },
+  tileVal: { fontFamily: FONT.bold, fontSize: 14, color: C.ink, marginTop: 2, fontVariant: ["tabular-nums"] },
+  tileSub: { fontFamily: FONT.body, fontSize: 10, color: C.sub, marginTop: 1 },
   legBack: { flex: 1, backgroundColor: "rgba(20,30,24,0.35)" },
   legCard: {
     position: "absolute",
