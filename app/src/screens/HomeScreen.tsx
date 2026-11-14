@@ -8,6 +8,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  Image,
   LayoutChangeEvent,
   Modal,
   PanResponder,
@@ -32,7 +33,6 @@ const INK = "#1F2A24";
 const SUB = "#5C6B62";
 const FAINT = "#8A968C";
 const LINE = "#DDE4DD";
-const GOLD = "#E7C464";
 const NBSP = " ";
 const MONTHS_N = 6;
 
@@ -118,7 +118,7 @@ function Coin({
         ],
       }}
     >
-      <View style={styles.coin} />
+      <Image source={require("../../assets/garden/coin.png")} style={styles.coin} />
     </Animated.View>
   );
 }
@@ -492,51 +492,15 @@ export function HomeScreen() {
     setObjSheet(kind as ObjKind);
   };
 
+  const hInk = g?.storm ? "#EDF2F5" : INK;
+  const hSub = g?.storm ? "#B9C6D0" : SUB;
+  const fade0 = g?.storm ? "rgba(28,42,60,0.72)" : "rgba(238,244,240,0.78)";
+  const fade1 = g?.storm ? "rgba(28,42,60,0.36)" : "rgba(238,244,240,0.40)";
+  const fade2 = g?.storm ? "rgba(28,42,60,0.15)" : "rgba(238,244,240,0.16)";
+
   return (
     <View style={styles.root}>
-      {/* header */}
-      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        {simMode ? (
-          <>
-            <Text style={styles.headLabelSim} numberOfLines={2}>
-              {`What if you spent ${Math.round(cut * 100)}% less on ${simCat}?`}
-            </Text>
-            <Text style={styles.headNum}>{`+${euro(dispCount)}`}</Text>
-            <Text style={styles.headSub}>
-              {sim ? `in 6 months · ${sim.hours} h of your work` : "asking the garden…"}
-            </Text>
-          </>
-        ) : g ? (
-          g.storm ? (
-            <>
-              <Text style={styles.headline}>Tight until payday</Text>
-              <Text style={styles.headSub}>
-                {`Rent ~${rw!.d0}–${rw!.d1} ${rw!.month} is next — keep to essentials for now.`}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text style={styles.headLabel}>
-                {g.left_cycle <= 0 || g.days_to_payday <= 1
-                  ? "left for fun this pay cycle"
-                  : "left for fun until payday"}
-              </Text>
-              <Text style={styles.headNum}>{g.left_cycle <= 0 ? `0${NBSP}€` : euro(g.left_cycle)}</Text>
-              <Text style={styles.headSub}>
-                {g.left_cycle <= 0
-                  ? `Still on your account: ${euro(g.balance)}.`
-                  : g.days_to_payday <= 1
-                    ? "Payday is due today."
-                    : `≈ ${euro(g.safe_today)}/day · payday in ~${g.days_to_payday} days`}
-              </Text>
-            </>
-          )
-        ) : (
-          <Text style={styles.headline}>{err ? "The garden is resting" : "Your garden"}</Text>
-        )}
-      </View>
-
-      {/* scene */}
+      {/* scene — full-bleed, the painted sky runs behind the header */}
       <View
         style={styles.sceneWrap}
         onLayout={(e) => setSceneSz({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
@@ -554,13 +518,58 @@ export function HomeScreen() {
         {floats.map((f) => (
           <FloatText key={f.id} {...f} onDone={() => setFloats((v) => v.filter((x) => x.id !== f.id))} />
         ))}
+      </View>
+
+      {/* header — floats on the painted sky with a soft top fade */}
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]} pointerEvents="box-none">
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: fade0 }]} />
+        <View style={{ position: "absolute", top: "100%", left: 0, right: 0, height: 26, backgroundColor: fade1 }} />
+        <View style={{ position: "absolute", top: "100%", marginTop: 26, left: 0, right: 0, height: 14, backgroundColor: fade2 }} />
         <Pressable
-          style={styles.help}
+          style={[styles.help, { top: insets.top + 12 }]}
           onPress={() => setLegend(true)}
           accessibilityLabel="What does the garden mean?"
         >
-          <Text style={styles.helpTxt}>?</Text>
+          <Text style={[styles.helpTxt, { color: hSub }]}>?</Text>
         </Pressable>
+        {simMode ? (
+          <>
+            <Text style={[styles.headLabelSim, { color: hSub }]} numberOfLines={2}>
+              {`What if you spent ${Math.round(cut * 100)}% less on ${simCat}?`}
+            </Text>
+            <Text style={[styles.headNum, { color: hInk }]}>{`+${euro(dispCount)}`}</Text>
+            <Text style={[styles.headSub, { color: hSub }]}>
+              {sim ? `in 6 months · ${sim.hours} h of your work` : "asking the garden…"}
+            </Text>
+          </>
+        ) : g ? (
+          g.storm ? (
+            <>
+              <Text style={[styles.headline, { color: hInk }]}>Tight until payday</Text>
+              <Text style={[styles.headSub, { color: hSub }]}>
+                {`Rent ~${rw!.d0}–${rw!.d1} ${rw!.month} is next — keep to essentials for now.`}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.headLabel, { color: hSub }]}>
+                {g.left_cycle <= 0 || g.days_to_payday <= 1
+                  ? "left for fun this pay cycle"
+                  : "left for fun until payday"}
+              </Text>
+              <Text style={[styles.headNum, { color: hInk }]}>{g.left_cycle <= 0 ? `0${NBSP}€` : euro(g.left_cycle)}</Text>
+              <Text style={[styles.headSub, { color: hSub }]}>
+                {g.left_cycle <= 0
+                  ? `Still on your account: ${euro(g.balance)}.`
+                  : g.days_to_payday <= 1
+                    ? "Payday is due today."
+                    : `≈ ${euro(g.safe_today)}/day · payday in ~${g.days_to_payday} days`}
+              </Text>
+            </>
+          )
+        ) : (
+          <Text style={[styles.headline, { color: hInk }]}>{err ? "The garden is resting" : "Your garden"}</Text>
+        )}
       </View>
 
       {/* bottom panel — flush on the tab bar */}
@@ -706,7 +715,7 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#C6D4DA" },
-  header: { paddingHorizontal: 20, paddingBottom: 8 },
+  header: { position: "absolute", top: 0, left: 0, right: 0, zIndex: 6, paddingHorizontal: 20, paddingBottom: 8 },
   headline: { fontFamily: "Figtree_700Bold", fontSize: 24, color: INK },
   headLabel: {
     fontFamily: "Figtree_700Bold",
@@ -797,12 +806,9 @@ const styles = StyleSheet.create({
   legCloseTxt: { fontFamily: "Figtree_700Bold", fontSize: 14, color: GREEN },
   // sim mode
   coin: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: GOLD,
-    borderWidth: 1.5,
-    borderColor: "#B8934A",
+    width: 16,
+    height: 18,
+    resizeMode: "contain",
   },
   floatTxt: {
     fontFamily: "Figtree_700Bold",

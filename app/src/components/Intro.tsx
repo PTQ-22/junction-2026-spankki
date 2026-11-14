@@ -7,9 +7,9 @@ import { useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg from "react-native-svg";
+import Svg, { Image as SvgImage } from "react-native-svg";
 
-import { Birch, Flower, Pond, Rail, Taimi, Weather } from "../garden/assets";
+import { ART_SRC, Birch, Flower, Pond, Taimi } from "../garden/assets";
 import { useDemo } from "../state";
 
 const GREEN = "#007841";
@@ -22,8 +22,9 @@ export function Legend() {
   const rows: { icon: React.ReactNode; label: string; what: string }[] = [
     {
       icon: (
-        <Svg viewBox="30 45 80 90" style={styles.icon}>
-          <Weather kind="sun" />
+        <Svg viewBox="0 0 40 40" style={styles.icon}>
+          {/* top of bg-sun: sky + sun */}
+          <SvgImage href={ART_SRC("bg-sun")} x={0} y={0} width={40} height={71.7} preserveAspectRatio="xMidYMin slice" />
         </Svg>
       ),
       label: "Weather",
@@ -31,8 +32,9 @@ export function Legend() {
     },
     {
       icon: (
-        <Svg viewBox="140 455 110 45" style={styles.icon}>
-          <Rail variant="sun" />
+        <Svg viewBox="0 0 40 40" style={styles.icon}>
+          {/* bg-sun shifted so the fence rails fill the icon */}
+          <SvgImage href={ART_SRC("bg-sun")} x={-8} y={-43} width={56} height={100.3} preserveAspectRatio="xMidYMid slice" />
         </Svg>
       ),
       label: "Fence",
@@ -40,8 +42,8 @@ export function Legend() {
     },
     {
       icon: (
-        <Svg viewBox="-13 -66 26 68" style={styles.icon}>
-          <Flower category="Restaurants" state="ok" />
+        <Svg viewBox="-15 -56 30 59" style={styles.icon}>
+          <Flower category="Restaurants" state="blooming" />
         </Svg>
       ),
       label: "Flowers",
@@ -49,8 +51,8 @@ export function Legend() {
     },
     {
       icon: (
-        <Svg viewBox="34 628 108 38" style={styles.icon}>
-          <Pond level={0.85} variant="sun" />
+        <Svg viewBox="-52 -50 104 52" style={styles.icon}>
+          <Pond level={1} variant="sun" />
         </Svg>
       ),
       label: "Pond",
@@ -58,7 +60,7 @@ export function Legend() {
     },
     {
       icon: (
-        <Svg viewBox="-36 -80 72 90" style={styles.icon}>
+        <Svg viewBox="-22 -108 44 112" style={styles.icon}>
           <Birch berries />
         </Svg>
       ),
@@ -117,7 +119,7 @@ export function IntroGate() {
       </Pressable>
       <View style={styles.body}>
         {slide === 0 && (
-          <Svg viewBox="-40 -150 80 160" style={styles.hero}>
+          <Svg viewBox="-40 -76 80 86" style={styles.hero}>
             <Taimi stage={3} mood="sun" />
           </Svg>
         )}

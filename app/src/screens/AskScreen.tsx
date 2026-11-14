@@ -105,7 +105,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
     <View style={styles.root}>
       <View style={[styles.hdr, { paddingTop: insets.top + 10 }]}>
         <View style={styles.glyphWrap}>
-          <Svg width={40} height={40} viewBox="-35 -128 70 135">
+          <Svg width={40} height={40} viewBox="-25 -50 50 56">
             <Taimi stage={g?.stage ?? 2} mood="sun" />
           </Svg>
         </View>

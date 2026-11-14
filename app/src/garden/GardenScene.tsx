@@ -14,17 +14,16 @@ import {
   Flower,
   InvestSapling,
   Pond,
-  Rail,
   RailPlate,
   Rain,
   Taimi,
   Variant,
-  Weather,
   pal,
 } from "./assets";
 
-const FX = [102, 118, 278, 320, 352];
-const TSCALE = [2.2, 1.6, 1.35, 1.15];
+const FX = [115, 162, 268, 314, 356];
+const FY = 575; // flower base: just in front of the painted fence (post bases ~554)
+const TSCALE = [3.3, 2.4, 2.0, 1.7];
 const SHADOW_RX = [46, 42, 50, 58];
 
 /** Short display names for the flower tags under each head. */
@@ -47,11 +46,11 @@ export type SceneObject = "weather" | "bills" | "savings" | "invest" | "taimi" |
 
 /** Tappable scene objects (scene coords): sky, rent plate, pond, tree, Taimi. */
 const OBJECT_AREAS: { kind: SceneObject; x0: number; y0: number; x1: number; y1: number }[] = [
-  { kind: "weather", x0: 20, y0: 80, x1: 370, y1: 300 },
-  { kind: "bills", x0: 8, y0: 372, x1: 96, y1: 436 },
-  { kind: "savings", x0: 30, y0: 548, x1: 148, y1: 662 },
-  { kind: "invest", x0: 322, y0: 425, x1: 378, y1: 560 },
-  { kind: "taimi", x0: 140, y0: 460, x1: 252, y1: 655 },
+  { kind: "weather", x0: 15, y0: 80, x1: 375, y1: 400 },
+  { kind: "bills", x0: 10, y0: 430, x1: 300, y1: 575 },
+  { kind: "savings", x0: 10, y0: 585, x1: 165, y1: 720 },
+  { kind: "invest", x0: 295, y0: 370, x1: 388, y1: 560 },
+  { kind: "taimi", x0: 135, y0: 470, x1: 260, y1: 685 },
 ];
 
 const pillBox = (text: string, x: number, y: number, end?: boolean) => {
@@ -59,12 +58,12 @@ const pillBox = (text: string, x: number, y: number, end?: boolean) => {
   return { x0: end ? x - w : x - w / 2, y0: y, w, h: 20 };
 };
 
-/** Flower head position in scene coords (flower G at y=512, head ≈ -49·1.85). */
-export const flowerHead = (i: number) => ({ x: FX[i], y: 421 });
+/** Flower head position in scene coords (flower base at FY, sprite ~96 tall). */
+export const flowerHead = (i: number) => ({ x: FX[i], y: 435 });
 export const flowerIndex = (g: GardenState, name: string) =>
   g.flowers.slice(0, 5).findIndex((f) => f.flower === name);
-export const POND_POS = { x: 88, y: 610 };
-export const POCKET_POS = { x: 88, y: 552 };
+export const POND_POS = { x: 88, y: 645 };
+export const POCKET_POS = { x: 88, y: 575 };
 
 export interface VB {
   x: number;
@@ -80,9 +79,9 @@ export const VB_DEF: VB = { x: 0, y: 60, w: 390, h: 844 };
  * window when the viewport is too short for it at width scale. */
 export function simViewBox(w: number, h: number): VB {
   const vhFit = Math.min(844, Math.max(280, Math.round((h * 390) / Math.max(1, w))));
-  const vh = Math.max(454, vhFit);
+  const vh = Math.max(360, vhFit);
   const vw = Math.max(390, Math.round((vh * w) / Math.max(1, h)));
-  return { x: (390 - vw) / 2, y: 844 - vh, w: vw, h: vh };
+  return { x: (390 - vw) / 2, y: 745 - vh, w: vw, h: vh };
 }
 
 /** xMidYMid slice mapping for a given viewBox. */
@@ -171,43 +170,40 @@ export function GardenScene({
       }}
     >
       <Svg viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
-      <Backdrop variant={v} />
-      {sim?.warm && <Rect x={-200} y={60} width={790} height={784} fill="#FFDF9E" opacity={0.12} />}
-      <Weather kind={v} />
-      <G x={36} y={430} scale={0.8}>
-        <Birch />
-      </G>
-      <Rail variant={v} />
-      <RailPlate
-        variant={v}
-        rent={g.rent}
-        paid={g.rent_paid}
-        windowText={`next ~${rw.d0}–${rw.d1} ${rw.month}`}
-      />
+      <Backdrop variant={v} vb={vb} />
+      {sim?.warm && <Rect x={-200} y={60} width={790} height={844} fill="#FFDF9E" opacity={0.12} />}
       {g.invest_total > 0 ? (
-        <G x={344} y={470} scale={1.15}>
+        <G x={344} y={545}>
           <Birch berries />
         </G>
       ) : (
-        <G x={344} y={472}>
+        <G x={344} y={545}>
           <InvestSapling />
         </G>
       )}
-      <G y={-34}>
+      <G x={52} y={560}>
+        <RailPlate
+          variant={v}
+          rent={g.rent}
+          paid={g.rent_paid}
+          windowText={`next ~${rw.d0}–${rw.d1} ${rw.month}`}
+        />
+      </G>
+      <G x={88} y={668}>
         <Pond level={pondLevel} variant={v} />
       </G>
       {sim && sim.pocket > 0 && (
-        <ScenePill x={88} y={552} text={`pocket +${Math.round(sim.pocket)} €`} bg="#F7E7B0" fg="#6B5718" />
+        <ScenePill x={42} y={596} text={`pocket +${Math.round(sim.pocket)} €`} bg="#F7E7B0" fg="#6B5718" />
       )}
       <Ellipse
         cx="195"
-        cy="606"
+        cy="643"
         rx={SHADOW_RX[stage - 1]}
         ry="7"
         fill={pal("shade", v)}
-        opacity={0.75}
+        opacity={0.55}
       />
-      <G x={195} y={600} scale={TSCALE[stage - 1] * (sim?.taimiScale ?? 1)}>
+      <G x={195} y={640} scale={TSCALE[stage - 1] * (sim?.taimiScale ?? 1)}>
         <Taimi stage={stage} mood={v} />
       </G>
       {g.flowers.slice(0, 5).map((f, i) => {
@@ -216,11 +212,12 @@ export function GardenScene({
           <G
             key={f.flower}
             x={FX[i]}
-            y={sel ? 500 : 512}
-            scale={1.85 * (sel ? sim?.flowerScale ?? 1 : 1)}
+            y={sel ? 560 : 575}
+            scale={2.8 * (sel ? sim?.flowerScale ?? 1 : 1)}
             opacity={sim && !sel ? 0.45 : 1}
           >
-            {sel && <Ellipse cy={-44} rx={19} ry={24} fill="#FFE9A8" opacity={0.4} />}
+            <Ellipse cx="0" cy="-1" rx="15" ry="2.6" fill={pal("shade", v)} opacity={0.5} />
+            {sel && <Ellipse cy={-46} rx={24} ry={30} fill="#FFE9A8" opacity={0.4} />}
             <Flower
               category={f.flower}
               state={sel ? sim!.flowerState : f.norm === 0 && f.last30 === 0 ? "dormant" : f.state}
@@ -228,30 +225,32 @@ export function GardenScene({
           </G>
         );
       })}
+      {/* cool veil over the ground band so sprites sit in storm/cloud light */}
+      {v !== "sun" && (
+        <Rect x={-200} y={420} width={790} height={484} fill="#2E4159" opacity={v === "storm" ? 0.18 : 0.07} />
+      )}
       {v === "storm" && <Rain />}
       {labels && !sim && (
         <G>
-          <ScenePill x={50} y={392} text="Bills ›" />
-          <ScenePill x={240} y={336} text="Fun spending ›" />
-          <ScenePill x={88} y={566} text="Savings ›" />
-          <ScenePill x={300} y={400} end text={`${g.invest_total > 0 ? "Investments" : "No investments yet"} ›`} />
+          <ScenePill x={52} y={448} text="Bills ›" />
+          <ScenePill x={42} y={596} text="Savings ›" />
+          <ScenePill x={378} y={486} end text={`${g.invest_total > 0 ? "Investments" : "No investments yet"} ›`} />
         </G>
       )}
-      {/* tiny name tag under each flower head */}
-      {g.flowers.slice(0, 5).map((f, i) => (
-        <SvgText
-          key={`tag-${f.flower}`}
-          x={FX[i]}
-          y={i % 2 === 0 ? 436 : 448}
-          textAnchor="middle"
-          fontSize={9.5}
-          fontWeight="700"
-          fill="#40514A"
-          opacity={sim && sim.selected !== f.flower ? 0.45 : 0.85}
-        >
-          {FLOWER_SHORT[f.flower] ?? f.flower}
-        </SvgText>
-      ))}
+      {/* tiny name tag under each flower */}
+      {g.flowers.slice(0, 5).map((f, i) => {
+        const name = FLOWER_SHORT[f.flower] ?? f.flower;
+        const w = name.length * 5.8 + 12;
+        const y = i % 2 === 0 ? 588 : 604;
+        return (
+          <G key={`tag-${f.flower}`} opacity={sim && sim.selected !== f.flower ? 0.45 : 0.9}>
+            <Rect x={FX[i] - w / 2} y={y} width={w} height={13} rx={6.5} fill="#FFFFFF" opacity={0.78} />
+            <SvgText x={FX[i]} y={y + 10} textAnchor="middle" fontSize={8.5} fontWeight="700" fill="#40514A">
+              {name}
+            </SvgText>
+          </G>
+        );
+      })}
       </Svg>
       {/* transparent tap targets — sky/objects first, pills, flowers last (on top) */}
       {sz && (
@@ -278,15 +277,14 @@ export function GardenScene({
             !sim &&
             onObjectPress &&
             [
-              pillBox("Bills ›", 50, 392),
-              pillBox("Fun spending ›", 240, 336),
-              pillBox("Savings ›", 88, 566),
-              pillBox(`${g.invest_total > 0 ? "Investments" : "No investments yet"} ›`, 300, 400, true),
+              pillBox("Bills ›", 52, 448),
+              pillBox("Savings ›", 42, 596),
+              pillBox(`${g.invest_total > 0 ? "Investments" : "No investments yet"} ›`, 378, 486, true),
             ].map((b, i) => (
               <Pressable
                 key={`pill-${i}`}
                 accessibilityRole="button"
-                onPress={() => onObjectPress(["bills", "fun", "savings", "invest"][i] as SceneObject)}
+                onPress={() => onObjectPress(["bills", "savings", "invest"][i] as SceneObject)}
                 style={({ pressed }) => ({
                   position: "absolute",
                   left: ox + (b.x0 - vb.x) * scale - 4,
@@ -308,9 +306,9 @@ export function GardenScene({
                 style={({ pressed }) => ({
                   position: "absolute",
                   left: ox + (FBOUNDS[i].lo - vb.x) * scale,
-                  top: oy + (395 - vb.y) * scale,
+                  top: oy + (415 - vb.y) * scale,
                   width: (FBOUNDS[i].hi - FBOUNDS[i].lo) * scale,
-                  height: 150 * scale,
+                  height: 200 * scale,
                   backgroundColor: pressed ? "rgba(255,255,255,0.35)" : "transparent",
                   borderRadius: 12,
                 })}
