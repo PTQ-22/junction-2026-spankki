@@ -5,7 +5,7 @@
  */
 import { useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Image as SvgImage } from "react-native-svg";
 
@@ -92,20 +92,52 @@ const SLIDES: { title: string; body?: string; legend?: boolean }[] = [
   },
 ];
 
+/** `intro` query value from a full URL (exp://host/--/path?intro=0, taimi://…). */
+function introFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = /[?&]intro=([^&#]*)/.exec(url);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
 export function IntroGate() {
   const { introSeen, setIntroSeen } = useDemo();
-  const params = useGlobalSearchParams<{ intro?: string }>();
+  const params = useGlobalSearchParams<{ intro?: string; n?: string }>();
   const raw = Array.isArray(params.intro) ? params.intro[0] : params.intro;
   const startAt = Math.min(2, Math.max(0, (parseInt(raw ?? "", 10) || 1) - 1));
   const [slide, setSlide] = useState(startAt);
+  // cold start: don't render the intro until the launch URL has been read —
+  // otherwise ?intro=0 flashes (or is lost before the router parses params)
+  const [initChecked, setInitChecked] = useState(false);
   const insets = useSafeAreaInsets();
 
-  // deep link ?intro=N re-targets a slide (demo/screenshot aid)
   useEffect(() => {
-    if (raw && raw !== "0") setSlide(startAt);
-  }, [raw]);
+    let live = true;
+    Linking.getInitialURL()
+      .then((url) => {
+        if (live && introFromUrl(url) === "0") setIntroSeen(true);
+      })
+      .catch(() => {})
+      .finally(() => live && setInitChecked(true));
+    // warm deep links: catch ?intro=0 even before the router updates params
+    const sub = Linking.addEventListener("url", ({ url }) => {
+      if (introFromUrl(url) === "0") setIntroSeen(true);
+    });
+    return () => {
+      live = false;
+      sub.remove();
+    };
+  }, []);
 
-  if (introSeen || raw === "0") return null;
+  // deep link ?intro=0 hides it for the session; ?intro=1|2|3 re-opens that slide
+  useEffect(() => {
+    if (raw === "0") setIntroSeen(true);
+    else if (raw === "1" || raw === "2" || raw === "3") {
+      setSlide(startAt);
+      setIntroSeen(false);
+    }
+  }, [raw, params.n]);
+
+  if (!initChecked || introSeen || raw === "0") return null;
   const s = SLIDES[slide];
   const last = slide === SLIDES.length - 1;
 

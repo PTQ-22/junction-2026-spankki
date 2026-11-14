@@ -84,21 +84,31 @@ export function simViewBox(w: number, h: number): VB {
   return { x: (390 - vw) / 2, y: 745 - vh, w: vw, h: vh };
 }
 
-/** Embedded window (Etusivu inside the S-mobiili chrome): bottom-anchored
- * viewBox covering flower heads → below the pond, PLUS ~125 sky rows above
- * the heads so the floating header's fade clears them. Fixed 390 wide so
- * sprites render at the full painted size; falls back to VB_DEF when the
- * window is tall enough. */
-export function embedViewBox(w: number, h: number): VB {
-  const vhFit = Math.round((h * 390) / Math.max(1, w));
-  if (vhFit >= 740) return VB_DEF;
-  // slightly wider than the painted scene (x −22 → 412) so flower tags and
-  // the fence get real margins instead of clipping at the screen edges;
-  // height follows the window so the pond is never cropped and the top keeps
-  // ~120+ pt of sky for the floating header
-  const VW = 434;
-  const vh = Math.round((h * VW) / Math.max(1, w));
-  return { x: -22, y: 715 - vh, w: VW, h: vh };
+/** Embedded window (Etusivu inside the S-mobiili chrome) — used for BOTH the
+ * normal garden and sim mode. Solves one viewBox so that:
+ *  - the content band [top … bottom] (flower heads → pond rim) sits entirely
+ *    BELOW `topInset` pt (the floating header + its fade) — header on sky only;
+ *  - the pond rim lands at the window bottom (never cropped);
+ *  - the window is at least MIN_W scene units wide (tags/fence keep margins),
+ *    centred on the scene (x=195).
+ * Scale = min(width bound, height bound) — sprites get as big as both allow.
+ * In sim the band starts higher (raised selected flower + its glow). */
+export const EMBED_MIN_W = 434;
+export function embedViewBox(w: number, h: number, topInset = 112, sim = false): VB {
+  const top = sim ? 385 : 415;
+  const bottom = 718;
+  const s = Math.max(0.4, Math.min(w / EMBED_MIN_W, (h - topInset) / (bottom - top)));
+  const vw = w / s;
+  const vh = h / s;
+  return { x: 195 - vw / 2, y: bottom - vh, w: vw, h: vh };
+}
+
+/** Taimi's x in sim: slide it sideways so it never overlaps the selected
+ * flower (Taimi ≤ ~110 wide at stage 2, flowers ≤ ~100) — 100 units apart. */
+export function taimiX(selectedX: number | null): number {
+  if (selectedX == null || Math.abs(selectedX - 195) >= 100) return 195;
+  const x = selectedX < 195 ? selectedX + 100 : selectedX - 100;
+  return Math.max(60, Math.min(330, x));
 }
 
 /** xMidYMid slice mapping for a given viewBox. */
@@ -160,14 +170,17 @@ export function GardenScene({
   labels,
   sim,
   embedded,
+  topInset,
 }: {
   g: GardenState;
   onFlowerPress?: (flower: string) => void;
   onObjectPress?: (kind: SceneObject) => void;
   labels?: boolean;
   sim?: SimVisual;
-  /** Rendered inside the bank chrome — bottom-anchor the window when short. */
+  /** Rendered inside the bank chrome — framing via embedViewBox (also in sim). */
   embedded?: boolean;
+  /** Embedded only: pt at the top covered by the floating header + fade. */
+  topInset?: number;
 }) {
   const v: Variant = variantOf(g);
   const stage = Math.min(4, Math.max(1, sim?.taimiStage ?? g.stage));
@@ -189,12 +202,26 @@ export function GardenScene({
     return () => cancelAnimationFrame(raf);
   }, [sim?.playing]);
 
-  // slice math — in sim mode the viewBox hugs the bottom of the scene;
-  // embedded (bank chrome) does the same for short windows so the pond stays
-  const vb = sim && sz ? simViewBox(sz.w, sz.h) : embedded && sz ? embedViewBox(sz.w, sz.h) : VB_DEF;
+  // slice math — embedded (bank chrome) frames normal + sim mode so the
+  // content band sits below the floating header; standalone keeps the old rules
+  const vb = !sz
+    ? VB_DEF
+    : embedded
+      ? embedViewBox(sz.w, sz.h, topInset, !!sim)
+      : sim
+        ? simViewBox(sz.w, sz.h)
+        : VB_DEF;
   const scale = sz ? Math.max(sz.w / vb.w, sz.h / vb.h) : 0;
   const ox = sz ? (sz.w - vb.w * scale) / 2 : 0;
   const oy = sz ? (sz.h - vb.h * scale) / 2 : 0;
+  // sim: Taimi slides away from the selected flower so it never occludes it
+  const selIdx = sim ? g.flowers.slice(0, 5).findIndex((f) => f.flower === sim.selected) : -1;
+  const tx = sim ? taimiX(selIdx >= 0 ? FX[selIdx] : null) : 195;
+  // draw order: non-selected flowers first, the selected one last (on top)
+  const flowerOrder = g.flowers
+    .slice(0, 5)
+    .map((f, i) => ({ f, i }))
+    .sort((a, b) => Number(a.i === selIdx) - Number(b.i === selIdx));
 
   return (
     <View
@@ -242,17 +269,17 @@ export function GardenScene({
         <ScenePill x={42} y={640} text={`pocket +${Math.round(sim.pocket)} €`} bg="#F7E7B0" fg="#6B5718" />
       )}
       <Ellipse
-        cx="195"
+        cx={tx}
         cy="643"
         rx={SHADOW_RX[stage - 1]}
         ry="7"
         fill={pal("shade", v)}
         opacity={0.55}
       />
-      <G x={195} y={640} scale={TSCALE[stage - 1] * (sim?.taimiScale ?? 1)}>
+      <G x={tx} y={640} scale={TSCALE[stage - 1] * (sim?.taimiScale ?? 1)}>
         <Taimi stage={stage} mood={v} />
       </G>
-      {g.flowers.slice(0, 5).map((f, i) => {
+      {flowerOrder.map(({ f, i }) => {
         const sel = sim?.selected === f.flower;
         return (
           <G
@@ -265,7 +292,7 @@ export function GardenScene({
             <Ellipse cx="0" cy="-1" rx="15" ry="2.6" fill={pal("shade", v)} opacity={0.5} />
             {sel && (
               <G scale={glowK}>
-                <Ellipse cy={-46} rx={40} ry={46} fill="url(#selGlow)" />
+                <Ellipse cy={-44} rx={36} ry={40} fill="url(#selGlow)" />
               </G>
             )}
             <Flower
@@ -320,7 +347,7 @@ export function GardenScene({
                 onPress={() => onObjectPress(a.kind)}
                 style={({ pressed }) => ({
                   position: "absolute",
-                  left: ox + (a.x0 - vb.x) * scale,
+                  left: ox + (a.x0 + (a.kind === "taimi" ? tx - 195 : 0) - vb.x) * scale,
                   top: oy + (a.y0 - vb.y) * scale,
                   width: (a.x1 - a.x0) * scale,
                   height: (a.y1 - a.y0) * scale,

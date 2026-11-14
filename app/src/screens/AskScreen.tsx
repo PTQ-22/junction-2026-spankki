@@ -53,7 +53,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
   const { persona, today, saveFirstPct } = useDemo();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ q?: string }>();
+  const params = useLocalSearchParams<{ q?: string; n?: string; reset?: string }>();
   const { g, offline, retry } = useGarden();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [busy, setBusy] = useState(false);
@@ -67,7 +67,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
   // greeting resets whenever the (re)fetched garden arrives — useGarden owns
   // the fetch, the offline flag and retry
   useEffect(() => {
-    lastQ.current = null;
+    // lastQ is NOT reset here: a refetched garden must not re-send an old ?q=
     setMsgs(g ? [{ role: "taimi", text: greeting(g) }] : []);
   }, [g]);
 
@@ -87,14 +87,30 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 150);
   };
 
-  // deep link ?q=… — auto-send each new question once, after the garden loads
+  // deep link ?reset=1[&n=…] — clear the conversation back to the greeting
+  const lastReset = useRef<string | null>(null);
+  useEffect(() => {
+    const key = params.reset === "1" ? `1|${params.n ?? ""}` : null;
+    if (key && g && lastReset.current !== key) {
+      lastReset.current = key;
+      lastQ.current = null;
+      setOpenSql(null);
+      setMsgs([{ role: "taimi", text: greeting(g) }]);
+    }
+  }, [params.reset, params.n, g]);
+
+  // deep link ?q=…[&n=…] — send the question once INTO the existing
+  // conversation (history kept, so follow-ups work). A new n re-sends the same
+  // q. If Taimi is still answering, it waits and sends when she's done.
   useEffect(() => {
     const q = Array.isArray(params.q) ? params.q[0] : params.q;
-    if (q && g && lastQ.current !== q) {
-      lastQ.current = q;
+    if (!q || !g || busy) return;
+    const key = `${q}|${params.n ?? ""}`;
+    if (lastQ.current !== key) {
+      lastQ.current = key;
       ask(q);
     }
-  }, [params.q, g]);
+  }, [params.q, params.n, g, busy]);
 
   return (
     <View style={styles.root}>

@@ -26,7 +26,7 @@ import { BANK, BankHeader } from "../components/BankChrome";
 import { FlowerSheet } from "../components/FlowerSheet";
 import { ObjectSheet, ObjKind } from "../components/ObjectSheet";
 import { Legend } from "../components/Intro";
-import { flowerHead, flowerIndex, GardenScene, POCKET_POS, POND_POS, sceneXY, simViewBox } from "../garden/GardenScene";
+import { embedViewBox, flowerHead, flowerIndex, GardenScene, POCKET_POS, POND_POS, sceneXY } from "../garden/GardenScene";
 import { OfflineCard, useGarden } from "../offline";
 import { useDemo } from "../state";
 import { C, FONT, R, SHADOW } from "../theme";
@@ -39,6 +39,20 @@ const euro2 = (n: number) =>
   `${n.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, " ")}${NBSP}€`;
 
 const DECIDE_CATS = ["Restaurants", "Entertainment", "Lifestyle"];
+
+/** Deep-link ?obj= values → ObjectSheet kinds (recording-script friendly aliases). */
+const OBJ_ALIAS: Record<string, ObjKind> = {
+  bills: "bills",
+  fence: "bills",
+  savings: "savings",
+  pond: "savings",
+  invest: "invest",
+  investments: "invest",
+  tree: "invest",
+  safe: "weather",
+  weather: "weather",
+  sky: "weather",
+};
 
 /* rAF tween channels — JS-driven so it works on web and native identically. */
 type Chan = { v: number; raf?: number };
@@ -74,7 +88,15 @@ function mkTweens() {
     c.raf = requestAnimationFrame(step);
   };
   const stopAll = () => Object.values(chan).forEach((c) => c.raf && cancelAnimationFrame(c.raf));
-  return { tween, pulse, stopAll };
+  /** Jump a channel to a value (no animation) — used when (re)entering sim. */
+  const jump = (key: string, v: number, set: (v: number) => void) => {
+    const c = chan[key] ?? (chan[key] = { v });
+    if (c.raf) cancelAnimationFrame(c.raf);
+    c.raf = undefined;
+    c.v = v;
+    set(v);
+  };
+  return { tween, pulse, stopAll, jump };
 }
 
 /** A coin that drops from the flower head to the pond (or the pocket chip). */
@@ -123,11 +145,11 @@ function Coin({
   );
 }
 
-/** Floating "+N €" that rises above the pond and fades. */
+/** Monthly "+N € this month" pill that pops just above the pond and fades. */
 function FloatText({ x, y, text, onDone }: { x: number; y: number; text: string; onDone: () => void }) {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.timing(v, { toValue: 1, duration: 1200, useNativeDriver: Platform.OS !== "web" }).start(
+    Animated.timing(v, { toValue: 1, duration: 1300, useNativeDriver: Platform.OS !== "web" }).start(
       ({ finished }) => finished && onDone(),
     );
   }, []);
@@ -136,15 +158,17 @@ function FloatText({ x, y, text, onDone }: { x: number; y: number; text: string;
       pointerEvents="none"
       style={{
         position: "absolute",
-        left: x - 46,
-        top: y,
-        width: 92,
+        left: x - 70,
+        top: y - 12,
+        width: 140,
         alignItems: "center",
-        opacity: v.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 1, 1, 0] }),
-        transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -46] }) }],
+        opacity: v.interpolate({ inputRange: [0, 0.12, 0.75, 1], outputRange: [0, 1, 1, 0] }),
+        transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [6, -14] }) }],
       }}
     >
-      <Text style={styles.floatTxt}>{text}</Text>
+      <View style={styles.floatPill}>
+        <Text style={styles.floatTxt}>{text}</Text>
+      </View>
     </Animated.View>
   );
 }
@@ -249,6 +273,8 @@ export function HomeScreen() {
     cut?: string;
     month?: string;
     autoplay?: string;
+    close?: string;
+    n?: string; // nonce — any new value re-triggers the same deep link
   }>();
   const { g, offline, retry } = useGarden();
   const [sheet, setSheet] = useState<string | null>(null);
@@ -272,6 +298,8 @@ export function HomeScreen() {
   const [floats, setFloats] = useState<FloatT[]>([]);
   const [reqTick, setReqTick] = useState(0);
   const [sceneSz, setSceneSz] = useState<{ w: number; h: number } | null>(null);
+  const [headH, setHeadH] = useState(0); // floating header height (pt) — frames the scene
+  const topInset = (headH || 86) + 18; // + the first fade strip under the header
   const [toast, setToast] = useState(false);
   const idRef = useRef(0);
   const prevMonth = useRef(0);
@@ -289,15 +317,34 @@ export function HomeScreen() {
     if (params.today && params.today !== today) setToday(params.today);
   }, [params.today]); // deep link: ?today=2026-09-15
 
+  // deep link: ?close=1 closes everything (sim, sheets, legend); ?sim=0 exits sim.
+  // Declared BEFORE the open effects so "?close=1&flower=X" closes then opens.
+  useEffect(() => {
+    if (params.close === "1" || params.sim === "0") {
+      exitSim();
+      if (params.close === "1") {
+        setSheet(null);
+        setObjSheet(null);
+        setLegend(false);
+      }
+    }
+  }, [params.close, params.sim, params.n]);
+
+  // deep link: ?flower=Entertainment / ?obj=bills|savings|investments|safe opens a
+  // sheet; add &n=<new value> to re-open the same one
   useEffect(() => {
     if (params.flower) setSheet(params.flower);
-    if (params.obj) setObjSheet(params.obj as ObjKind);
-  }, [params.flower, params.obj]); // deep link: ?flower=Entertainment / ?obj=savings opens a sheet
+    const k = params.obj ? OBJ_ALIAS[params.obj] : undefined;
+    if (k) setObjSheet(k);
+  }, [params.flower, params.obj, params.n]);
 
-  // deep link: ?sim=1&category=X&cut=0.2&month=3&autoplay=1
+  // deep link: ?sim=1&category=X&cut=0.2&month=3&autoplay=1[&persona=…][&n=…]
   useEffect(() => {
     if (params.sim !== "1" || !g) return;
-    const key = `${params.category}|${params.cut}|${params.month}|${params.autoplay}`;
+    // wait until the requested persona's garden has loaded (no stale categories)
+    if (params.persona && params.persona !== persona) return;
+    if (g.id !== persona) return;
+    const key = `${persona}|${params.category}|${params.cut}|${params.month}|${params.autoplay}|${params.n}`;
     if (simParamKey.current === key) return;
     simParamKey.current = key;
     const cat =
@@ -305,7 +352,7 @@ export function HomeScreen() {
     const c = parseFloat(params.cut ?? "0.2");
     const m = Math.max(0, Math.min(MONTHS_N, parseInt(params.month ?? "0", 10) || 0));
     enterSim(cat, isNaN(c) ? 0.2 : Math.min(0.5, Math.max(0, c)), m, params.autoplay === "1");
-  }, [params.sim, params.category, params.cut, params.month, params.autoplay, g]);
+  }, [params.sim, params.category, params.cut, params.month, params.autoplay, params.n, g, persona]);
 
   // garden fetch lives in useGarden() (shared offline path + retry)
 
@@ -375,10 +422,11 @@ export function HomeScreen() {
       const increment = sim.monthly_cumulative[m - 1] - (m > 1 ? sim.monthly_cumulative[m - 2] : 0);
       const i = flowerIndex(g, sim.category);
       if (sceneSz && i >= 0 && increment > 0) {
-        const vb = simViewBox(sceneSz.w, sceneSz.h);
+        // same framing GardenScene uses for the embedded sim
+        const vb = embedViewBox(sceneSz.w, sceneSz.h, topInset, true);
         const head = flowerHead(i);
         const dst = pck > 0 ? POCKET_POS : POND_POS;
-        const from = sceneXY(sceneSz.w, sceneSz.h, head.x, head.y, vb);
+        const from = sceneXY(sceneSz.w, sceneSz.h, head.x, head.y + 30, vb);
         const to = sceneXY(sceneSz.w, sceneSz.h, dst.x, dst.y, vb);
         const add = [0, 1, 2].map((k) => ({
           id: ++idRef.current,
@@ -389,17 +437,30 @@ export function HomeScreen() {
           delay: k * 150,
         }));
         setCoins((c) => [...c, ...add]);
-        const fpos = sceneXY(sceneSz.w, sceneSz.h, POND_POS.x, POND_POS.y - 18, vb);
-        setFloats((f) => [...f, { id: ++idRef.current, x: fpos.x, y: fpos.y, text: `+${Math.round(increment)} €` }]);
+        // monthly drop label — a legible pill just above the pond
+        const fpos = sceneXY(sceneSz.w, sceneSz.h, POND_POS.x + 14, POND_POS.y - 52, vb);
+        setFloats((f) => [
+          ...f,
+          { id: ++idRef.current, x: fpos.x, y: fpos.y, text: `+${Math.round(increment)} € this month` },
+        ]);
       }
       if (m === 1 && sim.future.flower_state !== sim.today.flower_state) tw.pulse("fscale", setFlowerScale);
       if (m === sim.months && sim.future.stage > sim.today.stage) tw.pulse("tscale", setTaimiScale);
     }
     prevMonth.current = m;
-  }, [month, sim, simMode, g, sceneSz]);
+  }, [month, sim, simMode, g, sceneSz, topInset]);
 
   const enterSim = (category: string, c: number, m0 = 0, autoplay = false) => {
     setSheet(null);
+    setObjSheet(null);
+    setPlaying(false);
+    tw.stopAll();
+    setFlowerScale(1);
+    setTaimiScale(1);
+    tw.jump("count", 0, setDispCount);
+    tw.jump("pocket", 0, setPocket);
+    if (g) tw.jump("pond", g.pond_target > 0 ? g.pond_fill / g.pond_target : 0, setPondLv);
+    autoplayPending.current = false;
     setSimCat(category);
     setCut(c);
     setCutApplied(c);
@@ -416,7 +477,10 @@ export function HomeScreen() {
   const exitSim = () => {
     setPlaying(false);
     autoplayPending.current = false;
+    simParamKey.current = ""; // the same ?sim=1… deep link replays after an exit
     tw.stopAll();
+    setFlowerScale(1);
+    setTaimiScale(1);
     setSimCat(null);
     setSim(null);
     setSimErr(false);
@@ -452,12 +516,44 @@ export function HomeScreen() {
     else router.push({ pathname: "/(tabs)/ask", params: note.q ? { q: note.q } : {} });
   };
 
+  // ---- on-screen sim numbers — ALL derived from the one animated counter so
+  // they always agree: counter = pond part + pocket part; hours ∝ counter.
+  const cntR = Math.round(dispCount);
+  const pondRoom = g && g.pond_target > 0 ? Math.max(0, Math.round(g.pond_target - g.pond_fill)) : 0;
+  const pocketShown = g && g.pond_target > 0 ? Math.max(0, cntR - pondRoom) : cntR;
+  const pondPart = cntR - pocketShown;
+  const simLast = sim ? sim.monthly_cumulative[sim.months - 1] ?? sim.total : 0;
+  const hoursShown = !sim
+    ? 0
+    : Math.abs(dispCount - simLast) < 0.05
+      ? sim.hours
+      : sim.total > 0
+        ? Math.round(((sim.hours * dispCount) / sim.total) * 10) / 10
+        : 0;
+  const simSuffix1 = !sim
+    ? simErr
+      ? "can't reach the garden"
+      : "asking the garden…"
+    : month === 0 && cntR === 0
+      ? playing
+        ? "today · watching the next 6 months…"
+        : "today · press Play to watch 6 months"
+      : `${month >= sim.months ? "in 6 months" : `after ${month} month${month === 1 ? "" : "s"}`} · ${hoursShown.toFixed(1)} h of your work`;
+  const simSuffix2 =
+    sim && cntR > 0
+      ? pocketShown > 0
+        ? pondPart > 0
+          ? `pond +${pondPart} € · pocket +${pocketShown} €`
+          : `pond is full → all +${pocketShown} € in your pocket`
+        : `all into your pond`
+      : null;
+
   const simVisual =
     simMode && sim && g
       ? {
           selected: sim.category,
           pondLevel: pondLv,
-          pocket,
+          pocket: pocketShown,
           flowerState: month >= 1 ? sim.future.flower_state : sim.today.flower_state,
           flowerScale,
           taimiStage: month >= sim.months ? sim.future.stage : sim.today.stage,
@@ -536,7 +632,15 @@ export function HomeScreen() {
         onLayout={(e) => setSceneSz({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       >
         {g ? (
-          <GardenScene g={g} onFlowerPress={onFlowerPress} onObjectPress={onObjectPress} labels sim={simVisual} embedded />
+          <GardenScene
+            g={g}
+            onFlowerPress={onFlowerPress}
+            onObjectPress={onObjectPress}
+            labels
+            sim={simVisual}
+            embedded
+            topInset={topInset}
+          />
         ) : (
           <View style={styles.loading}>
             {offline ? <OfflineCard onRetry={retry} /> : <ActivityIndicator color={C.green} />}
@@ -551,7 +655,14 @@ export function HomeScreen() {
 
       {/* header — floats on the painted sky with a soft top fade; kept tight
           so its fade edge clears the flower heads in the embedded window */}
-      <View style={[styles.header, { paddingTop: 8 }]} pointerEvents="box-none">
+      <View
+        style={[styles.header, { paddingTop: 8 }]}
+        pointerEvents="box-none"
+        onLayout={(e) => {
+          const h = Math.round(e.nativeEvent.layout.height);
+          if (Math.abs(h - headH) > 1) setHeadH(h);
+        }}
+      >
         <View style={[StyleSheet.absoluteFill, { backgroundColor: fade0 }]} />
         <View style={{ position: "absolute", top: "100%", left: 0, right: 0, height: 18, backgroundColor: fade1 }} />
         <View style={{ position: "absolute", top: "100%", marginTop: 18, left: 0, right: 0, height: 9, backgroundColor: fade2 }} />
@@ -564,17 +675,27 @@ export function HomeScreen() {
         </Pressable>
         {simMode ? (
           <>
-            <Text style={[styles.headLabelSim, { color: hSub }]} numberOfLines={2}>
+            {/* compact: one-line question, then big number + small suffix on one row */}
+            <Text
+              style={[styles.headLabelSim, { color: hSub, marginRight: 36 }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {`What if you spent ${Math.round(cut * 100)}% less on ${simCat}?`}
             </Text>
-            <Text style={[styles.headNum, { color: hInk }]}>{`+${euro(dispCount)}`}</Text>
-            <Text style={[styles.headSub, { color: hSub }]}>
-              {sim
-                ? `in 6 months · ${sim.hours} h of your work`
-                : simErr
-                  ? "can't reach the garden"
-                  : "asking the garden…"}
-            </Text>
+            <View style={styles.simRow}>
+              <Text style={[styles.headNumSim, { color: hInk }]}>{`+${euro(dispCount)}`}</Text>
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={[styles.simSuffix, { color: hSub }]} numberOfLines={1} adjustsFontSizeToFit>
+                  {simSuffix1}
+                </Text>
+                {simSuffix2 && (
+                  <Text style={[styles.simSuffix2, { color: hInk }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {simSuffix2}
+                  </Text>
+                )}
+              </View>
+            </View>
           </>
         ) : g ? (
           g.storm ? (
@@ -911,12 +1032,29 @@ const styles = StyleSheet.create({
     height: 18,
     resizeMode: "contain",
   },
+  floatPill: {
+    backgroundColor: "#F7E7B0",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "rgba(107,87,24,0.25)",
+  },
   floatTxt: {
     fontFamily: FONT.bold,
-    fontSize: 15,
-    color: "#7A5C14",
+    fontSize: 13,
+    color: "#6B5718",
     fontVariant: ["tabular-nums"],
   },
+  simRow: { flexDirection: "row", alignItems: "center", marginTop: 0 },
+  headNumSim: {
+    fontFamily: FONT.display,
+    fontSize: 38,
+    letterSpacing: -1,
+    fontVariant: ["tabular-nums"],
+  },
+  simSuffix: { fontFamily: FONT.semi, fontSize: 12.5 },
+  simSuffix2: { fontFamily: FONT.bold, fontSize: 12.5, marginTop: 1, fontVariant: ["tabular-nums"] },
   chip: {
     borderWidth: 1,
     borderColor: "transparent",
