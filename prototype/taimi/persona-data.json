@@ -1,0 +1,532 @@
+{
+ "CUST04957": {
+  "id": "CUST04957",
+  "age": 18,
+  "zip": "02680",
+  "today": "2026-09-15",
+  "balance": 6523,
+  "salary": 2600,
+  "hourly": 16.25,
+  "payday_window": [
+   15,
+   29
+  ],
+  "salary_received_this_month": false,
+  "days_to_payday": 14,
+  "rent": 864,
+  "rent_window": [
+   1,
+   6
+  ],
+  "rent_paid": true,
+  "bills_due": 179,
+  "essentials_due": 559,
+  "pond_target": 668,
+  "pond_fill": 668,
+  "safe_today": 0,
+  "safe_week": 0,
+  "month_free": 99,
+  "spent_cycle": 467,
+  "left_cycle": -368,
+  "spent_week_leaks": 148,
+  "storm": false,
+  "invest_month": 0,
+  "essentials_p75_month": 1198,
+  "utilities_month": 179,
+  "flowers": [
+   {
+    "flower": "Restaurants",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 334.0,
+    "state": "blooming",
+    "hours": 0.0
+   },
+   {
+    "flower": "Entertainment",
+    "last30": 319.0,
+    "n": 4,
+    "norm": 120.0,
+    "state": "wilting",
+    "hours": 19.6
+   },
+   {
+    "flower": "Lifestyle",
+    "last30": 148.0,
+    "n": 1,
+    "norm": 80.0,
+    "state": "wilting",
+    "hours": 9.1
+   },
+   {
+    "flower": "Travel",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   },
+   {
+    "flower": "Taxi",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   }
+  ],
+  "restaurants_tx": [],
+  "top_flower": "Entertainment",
+  "top_flower_tx": [
+   {
+    "d": "Sun 23 Aug",
+    "mcc": 7996,
+    "eur": 48.95
+   },
+   {
+    "d": "Sat 22 Aug",
+    "mcc": 7832,
+    "eur": 66.62
+   },
+   {
+    "d": "Sat 22 Aug",
+    "mcc": 7922,
+    "eur": 54.44
+   },
+   {
+    "d": "Fri 21 Aug",
+    "mcc": 7832,
+    "eur": 148.79
+   }
+  ],
+  "restaurants_weekend_share": 0.62,
+  "invest_total": 0,
+  "invest_months": 0,
+  "invest_last": 0,
+  "leaks_norm_month": 534,
+  "sim_minus20_restaurants_6m": 401,
+  "sim_minus20_hours": 24.7
+ },
+ "CUST00359": {
+  "id": "CUST00359",
+  "age": 18,
+  "zip": "01840",
+  "today": "2026-09-15",
+  "balance": -366,
+  "salary": 1433,
+  "hourly": 8.96,
+  "payday_window": [
+   15,
+   30
+  ],
+  "salary_received_this_month": false,
+  "days_to_payday": 15,
+  "rent": 725,
+  "rent_window": [
+   2,
+   7
+  ],
+  "rent_paid": true,
+  "bills_due": 54,
+  "essentials_due": 136,
+  "pond_target": 302,
+  "pond_fill": 0,
+  "safe_today": 0,
+  "safe_week": 0,
+  "month_free": 188,
+  "spent_cycle": 437,
+  "left_cycle": -249,
+  "spent_week_leaks": 128,
+  "storm": true,
+  "invest_month": 0,
+  "essentials_p75_month": 273,
+  "utilities_month": 104,
+  "flowers": [
+   {
+    "flower": "Restaurants",
+    "last30": 406.0,
+    "n": 6,
+    "norm": 145.0,
+    "state": "wilting",
+    "hours": 45.3
+   },
+   {
+    "flower": "Entertainment",
+    "last30": 31.0,
+    "n": 2,
+    "norm": 47.0,
+    "state": "blooming",
+    "hours": 3.5
+   },
+   {
+    "flower": "Taxi",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 18.0,
+    "state": "blooming",
+    "hours": 0.0
+   },
+   {
+    "flower": "Lifestyle",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   },
+   {
+    "flower": "Travel",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   }
+  ],
+  "restaurants_tx": [
+   {
+    "d": "Sun 13 Sep",
+    "mcc": 5812,
+    "eur": 60.1
+   },
+   {
+    "d": "Sat 12 Sep",
+    "mcc": 5812,
+    "eur": 53.21
+   },
+   {
+    "d": "Fri 04 Sep",
+    "mcc": 5812,
+    "eur": 115.75
+   },
+   {
+    "d": "Fri 04 Sep",
+    "mcc": 5812,
+    "eur": 44.68
+   },
+   {
+    "d": "Thu 03 Sep",
+    "mcc": 5812,
+    "eur": 26.6
+   },
+   {
+    "d": "Sun 30 Aug",
+    "mcc": 5814,
+    "eur": 105.53
+   }
+  ],
+  "top_flower": "Restaurants",
+  "top_flower_tx": [
+   {
+    "d": "Sun 13 Sep",
+    "mcc": 5812,
+    "eur": 60.1
+   },
+   {
+    "d": "Sat 12 Sep",
+    "mcc": 5812,
+    "eur": 53.21
+   },
+   {
+    "d": "Fri 04 Sep",
+    "mcc": 5812,
+    "eur": 115.75
+   },
+   {
+    "d": "Fri 04 Sep",
+    "mcc": 5812,
+    "eur": 44.68
+   },
+   {
+    "d": "Thu 03 Sep",
+    "mcc": 5812,
+    "eur": 26.6
+   },
+   {
+    "d": "Sun 30 Aug",
+    "mcc": 5814,
+    "eur": 105.53
+   }
+  ],
+  "restaurants_weekend_share": 0.51,
+  "invest_total": 0,
+  "invest_months": 0,
+  "invest_last": 0,
+  "leaks_norm_month": 210,
+  "sim_minus20_restaurants_6m": 174,
+  "sim_minus20_hours": 19.4
+ },
+ "CUST00095": {
+  "id": "CUST00095",
+  "age": 21,
+  "zip": "01900",
+  "today": "2026-09-15",
+  "balance": 12172,
+  "salary": 1930,
+  "hourly": 12.06,
+  "payday_window": [
+   15,
+   15
+  ],
+  "salary_received_this_month": false,
+  "days_to_payday": 1,
+  "rent": 916,
+  "rent_window": [
+   1,
+   7
+  ],
+  "rent_paid": true,
+  "bills_due": 6,
+  "essentials_due": 4,
+  "pond_target": 53,
+  "pond_fill": 53,
+  "safe_today": 495,
+  "safe_week": 3467,
+  "month_free": 618,
+  "spent_cycle": 123,
+  "left_cycle": 495,
+  "spent_week_leaks": 10,
+  "storm": false,
+  "invest_month": 0,
+  "essentials_p75_month": 109,
+  "utilities_month": 93,
+  "flowers": [
+   {
+    "flower": "Entertainment",
+    "last30": 50.0,
+    "n": 6,
+    "norm": 20.0,
+    "state": "wilting",
+    "hours": 4.1
+   },
+   {
+    "flower": "Restaurants",
+    "last30": 29.0,
+    "n": 12,
+    "norm": 18.0,
+    "state": "wilting",
+    "hours": 2.4
+   },
+   {
+    "flower": "Lifestyle",
+    "last30": 44.0,
+    "n": 1,
+    "norm": 7.0,
+    "state": "wilting",
+    "hours": 3.6
+   },
+   {
+    "flower": "Travel",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   },
+   {
+    "flower": "Taxi",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   }
+  ],
+  "restaurants_tx": [
+   {
+    "d": "Mon 14 Sep",
+    "mcc": 5812,
+    "eur": 3.19
+   },
+   {
+    "d": "Sat 12 Sep",
+    "mcc": 5812,
+    "eur": 2.05
+   },
+   {
+    "d": "Fri 11 Sep",
+    "mcc": 5814,
+    "eur": 1.38
+   },
+   {
+    "d": "Wed 09 Sep",
+    "mcc": 5812,
+    "eur": 1.67
+   },
+   {
+    "d": "Sun 06 Sep",
+    "mcc": null,
+    "eur": 2.55
+   },
+   {
+    "d": "Sat 05 Sep",
+    "mcc": 5812,
+    "eur": 3.15
+   }
+  ],
+  "top_flower": "Lifestyle",
+  "top_flower_tx": [
+   {
+    "d": "Sun 23 Aug",
+    "mcc": 5691,
+    "eur": 43.9
+   }
+  ],
+  "restaurants_weekend_share": 0.69,
+  "invest_total": 0,
+  "invest_months": 0,
+  "invest_last": 0,
+  "leaks_norm_month": 45,
+  "sim_minus20_restaurants_6m": 22,
+  "sim_minus20_hours": 1.8
+ },
+ "CUST03539": {
+  "id": "CUST03539",
+  "age": 25,
+  "zip": "00950",
+  "today": "2026-09-15",
+  "balance": 8781,
+  "salary": 1702,
+  "hourly": 10.64,
+  "payday_window": [
+   15,
+   30
+  ],
+  "salary_received_this_month": false,
+  "days_to_payday": 15,
+  "rent": 800,
+  "rent_window": [
+   1,
+   7
+  ],
+  "rent_paid": true,
+  "bills_due": 0,
+  "essentials_due": 39,
+  "pond_target": 90,
+  "pond_fill": 90,
+  "safe_today": 5,
+  "safe_week": 34,
+  "month_free": 309,
+  "spent_cycle": 237,
+  "left_cycle": 73,
+  "spent_week_leaks": 24,
+  "storm": false,
+  "invest_month": 236,
+  "essentials_p75_month": 77,
+  "utilities_month": 109,
+  "flowers": [
+   {
+    "flower": "Entertainment",
+    "last30": 7.0,
+    "n": 3,
+    "norm": 38.0,
+    "state": "blooming",
+    "hours": 0.7
+   },
+   {
+    "flower": "Restaurants",
+    "last30": 156.0,
+    "n": 11,
+    "norm": 31.0,
+    "state": "wilting",
+    "hours": 14.7
+   },
+   {
+    "flower": "Lifestyle",
+    "last30": 28.0,
+    "n": 1,
+    "norm": 0.0,
+    "state": "wilting",
+    "hours": 2.6
+   },
+   {
+    "flower": "Travel",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   },
+   {
+    "flower": "Taxi",
+    "last30": 0.0,
+    "n": 0,
+    "norm": 0.0,
+    "state": "blooming",
+    "hours": 0.0
+   }
+  ],
+  "restaurants_tx": [
+   {
+    "d": "Fri 11 Sep",
+    "mcc": 5812,
+    "eur": 4.15
+   },
+   {
+    "d": "Fri 11 Sep",
+    "mcc": 5812,
+    "eur": 16.23
+   },
+   {
+    "d": "Wed 02 Sep",
+    "mcc": 5814,
+    "eur": 8.16
+   },
+   {
+    "d": "Mon 31 Aug",
+    "mcc": 5812,
+    "eur": 22.67
+   },
+   {
+    "d": "Sun 30 Aug",
+    "mcc": 5814,
+    "eur": 23.76
+   },
+   {
+    "d": "Fri 28 Aug",
+    "mcc": 5814,
+    "eur": 8.8
+   }
+  ],
+  "top_flower": "Restaurants",
+  "top_flower_tx": [
+   {
+    "d": "Fri 11 Sep",
+    "mcc": 5812,
+    "eur": 4.15
+   },
+   {
+    "d": "Fri 11 Sep",
+    "mcc": 5812,
+    "eur": 16.23
+   },
+   {
+    "d": "Wed 02 Sep",
+    "mcc": 5814,
+    "eur": 8.16
+   },
+   {
+    "d": "Mon 31 Aug",
+    "mcc": 5812,
+    "eur": 22.67
+   },
+   {
+    "d": "Sun 30 Aug",
+    "mcc": 5814,
+    "eur": 23.76
+   },
+   {
+    "d": "Fri 28 Aug",
+    "mcc": 5814,
+    "eur": 8.8
+   }
+  ],
+  "restaurants_weekend_share": 0.52,
+  "invest_total": 5289,
+  "invest_months": 23,
+  "invest_last": 241,
+  "leaks_norm_month": 69,
+  "sim_minus20_restaurants_6m": 37,
+  "sim_minus20_hours": 3.5
+ }
+}
