@@ -212,6 +212,23 @@ zmieniają się z suwakiem) + wykres skumulowanej oszczędności 6 mies. + godzi
   persony, data „dziś”, % save first – kontrolki demo).
 - Norma kwiatów = mediana 6 pełnych miesięcy przed bieżącym (prototyp liczył luty–lipiec – błąd, dane prototypu są zamrożone).
 
+### Stan implementacji (15.11, aktualizacja po sesji wieczornej)
+- Repo publiczne: https://github.com/PTQ-22/junction-2026-spankki (12+ commitów). Zrzuty robocze
+  `app/.screenshots/` są gitignored; wybrane w `docs/screenshots/` + README.
+- **Grafika gouache (styl A)** wygenerowana Gemini image models → `app/assets/garden/` (30 assetów,
+  pipeline `experiments/art_assets.py`, raw w `prototype/art/raw/` lokalnie). Scena = prawdziwe obrazki
+  przez mapę slotów; theme `app/src/theme.ts` (papier, Fraunces + Figtree).
+- **Benchmark rówieśników**: `GET /api/customers/{id}/benchmarks?today=` + narzędzie czatu `benchmark` +
+  HBS 2022 (`backend/hbs.json`, CC BY 4.0) → „me vs peers ±5y vs Finns". Wiersz pod kwiatami w Spending.
+- **S-mobiili mock**: trasa `/smobiili` — bankowy chrome (S-Tili z prawdziwym saldem) + żywy ogród
+  w środku; zrzut `app/.screenshots/ds-smobiili.png`.
+- **Offline**: `app/src/offline.tsx` (OfflineCard + `useGarden()`) na wszystkich ekranach zamiast
+  cichych zer.
+- **Zobowiązanie**: Profile → „One promise" toggle = save_first 1% (Save More Tomorrow).
+- Czat: Claude Haiku 5.5 → Gemini Lite → szablony; pytania dowolne, pamięć 6 tur, follow-up
+  „month_offset", grounding liczb, provider tag, receipts.
+- Do zrobienia: pitch/demo script, FI/SV copy, PSD2 mgła (CUST02948), widget, header mgiełka polish.
+
 ### Stan implementacji (15.11)
 - **Backend gotowy**: `data/spankki.duckdb` z CSV (`uv run python -m backend.db`); endpointy `/api/health`,
   `/api/personas`, `GET /api/customers/{id}/garden`, `POST /simulate`, `GET /transactions?flower=&days=&today=`
