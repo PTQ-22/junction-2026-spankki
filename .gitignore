@@ -23,9 +23,9 @@ data/
 app/.screenshots/
 
 # Research leftovers from other challenges (kept locally, not part of the project)
-newsmon/
-main.py
-topics.json
+/newsmon/
+/main.py
+/topics.json
 experiments/alarm_feasibility.py
 experiments/context_capabilities.py
 experiments/exa_feasibility.py
