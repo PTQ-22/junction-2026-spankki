@@ -20,9 +20,9 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fetchSimulate, GardenState, SimResult } from "../api";
+import { BANK, BankHeader } from "../components/BankChrome";
 import { FlowerSheet } from "../components/FlowerSheet";
 import { ObjectSheet, ObjKind } from "../components/ObjectSheet";
 import { Legend } from "../components/Intro";
@@ -35,6 +35,8 @@ const NBSP = " ";
 const MONTHS_N = 6;
 
 const euro = (n: number) => `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}${NBSP}€`;
+const euro2 = (n: number) =>
+  `${n.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, " ")}${NBSP}€`;
 
 const DECIDE_CATS = ["Restaurants", "Entertainment", "Lifestyle"];
 
@@ -237,7 +239,6 @@ interface FloatT {
 export function HomeScreen() {
   const { persona, today, saveFirstPct, setPersona, setToday } = useDemo();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     persona?: string;
     today?: string;
@@ -505,13 +506,43 @@ export function HomeScreen() {
 
   return (
     <View style={styles.root}>
-      {/* scene — full-bleed, the painted sky runs behind the header */}
+      {/* S-Pankki bank chrome — Taimi lives inside S-mobiili by default */}
+      <BankHeader />
+
+      {/* accounts — mocked chrome, but the S-Tili balance is the real one */}
+      <View style={styles.sec}>
+        <Text style={styles.secLbl}>Tilit</Text>
+        <View style={styles.mockTag}>
+          <Text style={styles.mockTagTxt}>mock</Text>
+        </View>
+      </View>
+      <View style={styles.acctCard}>
+        <View style={styles.acctIcon}>
+          <Ionicons name="wallet-outline" size={18} color="#FFFFFF" />
+        </View>
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={styles.acctName}>S-Tili</Text>
+          <Text style={styles.acctIban}>FI21 1234 5600 0789 05</Text>
+        </View>
+        <Text style={styles.acctBal}>{g ? euro2(g.balance) : "1 284,55 €"}</Text>
+      </View>
+
+      {/* Taimi section — the garden is still the interface under the chrome */}
+      <View style={styles.sec}>
+        <Text style={styles.taimiTitle}>Taimi · oma puutarhasi</Text>
+        <View style={styles.coachPill}>
+          <Text style={styles.coachPillTxt}>coach</Text>
+        </View>
+      </View>
+
+      {/* scene — full-bleed inside its window; the painted sky runs behind
+          the floating header just like before */}
       <View
         style={styles.sceneWrap}
         onLayout={(e) => setSceneSz({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       >
         {g ? (
-          <GardenScene g={g} onFlowerPress={onFlowerPress} onObjectPress={onObjectPress} labels sim={simVisual} />
+          <GardenScene g={g} onFlowerPress={onFlowerPress} onObjectPress={onObjectPress} labels sim={simVisual} embedded />
         ) : (
           <View style={styles.loading}>
             {offline ? <OfflineCard onRetry={retry} /> : <ActivityIndicator color={C.green} />}
@@ -523,15 +554,15 @@ export function HomeScreen() {
         {floats.map((f) => (
           <FloatText key={f.id} {...f} onDone={() => setFloats((v) => v.filter((x) => x.id !== f.id))} />
         ))}
-      </View>
 
-      {/* header — floats on the painted sky with a soft top fade */}
-      <View style={[styles.header, { paddingTop: insets.top + 14 }]} pointerEvents="box-none">
+      {/* header — floats on the painted sky with a soft top fade; kept tight
+          so its fade edge clears the flower heads in the embedded window */}
+      <View style={[styles.header, { paddingTop: 8 }]} pointerEvents="box-none">
         <View style={[StyleSheet.absoluteFill, { backgroundColor: fade0 }]} />
-        <View style={{ position: "absolute", top: "100%", left: 0, right: 0, height: 26, backgroundColor: fade1 }} />
-        <View style={{ position: "absolute", top: "100%", marginTop: 26, left: 0, right: 0, height: 14, backgroundColor: fade2 }} />
+        <View style={{ position: "absolute", top: "100%", left: 0, right: 0, height: 18, backgroundColor: fade1 }} />
+        <View style={{ position: "absolute", top: "100%", marginTop: 18, left: 0, right: 0, height: 9, backgroundColor: fade2 }} />
         <Pressable
-          style={[styles.help, { top: insets.top + 12 }]}
+          style={[styles.help, { top: 10 }]}
           onPress={() => setLegend(true)}
           accessibilityLabel="What does the garden mean?"
         >
@@ -580,6 +611,12 @@ export function HomeScreen() {
           <Text style={[styles.headline, { color: hInk }]}>{offline ? "The garden is resting" : "Your garden"}</Text>
         )}
       </View>
+      </View>
+
+      {/* faint caption under the scene — the bank-nav pitch line */}
+      <Text style={styles.captionTxt} numberOfLines={1} adjustsFontSizeToFit>
+        Omat ostot → the flowers · Säästäjä → the pond
+      </Text>
 
       {/* bottom panel — flush on the tab bar */}
       {g && simMode ? (
@@ -769,8 +806,70 @@ const styles = StyleSheet.create({
     color: C.sub,
   },
   headSub: { fontFamily: FONT.body, fontSize: 13, color: C.sub, marginTop: 3 },
-  sceneWrap: { flex: 1 },
+  sceneWrap: { flex: 1, overflow: "hidden" }, // clip the painted backdrop inside the scene window
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
+  // S-mobiili chrome — mocked frame around the real garden
+  sec: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    gap: 8,
+  },
+  secLbl: {
+    fontFamily: FONT.bold,
+    fontSize: 11.5,
+    color: C.sub,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  mockTag: {
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  mockTagTxt: { fontFamily: FONT.semi, fontSize: 9, color: C.faint, textTransform: "uppercase" },
+  acctCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: BANK, // the green account card, like S-mobiili's S-Etukortti card
+    borderRadius: R.card,
+    marginHorizontal: 16,
+    padding: 14,
+    paddingRight: 62, // keep the balance clear of the dev-tools overlay at the right edge
+    ...SHADOW,
+  },
+  acctIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  acctName: { fontFamily: FONT.bold, fontSize: 14.5, color: "#FFFFFF" },
+  acctIban: { fontFamily: FONT.body, fontSize: 11.5, color: "rgba(255,255,255,0.72)", marginTop: 1 },
+  acctBal: { fontFamily: FONT.bold, fontSize: 16, color: "#FFFFFF", fontVariant: ["tabular-nums"] },
+  taimiTitle: { fontFamily: FONT.display, fontSize: 17, color: BANK },
+  coachPill: {
+    backgroundColor: C.sageSoft,
+    borderRadius: R.chip,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  coachPillTxt: { fontFamily: FONT.semi, fontSize: 10, color: C.spruce },
+  captionTxt: {
+    fontFamily: FONT.body,
+    fontSize: 10.5,
+    color: C.faint,
+    textAlign: "center",
+    paddingHorizontal: 12,
+    marginTop: 4,
+    marginBottom: 2,
+  },
   help: {
     position: "absolute",
     top: 10,

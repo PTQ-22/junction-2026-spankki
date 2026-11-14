@@ -84,6 +84,21 @@ export function simViewBox(w: number, h: number): VB {
   return { x: (390 - vw) / 2, y: 745 - vh, w: vw, h: vh };
 }
 
+/** Embedded window (Etusivu inside the S-mobiili chrome): bottom-anchored
+ * viewBox covering flower heads → below the pond, PLUS ~120 pt of sky above
+ * the heads so the floating header's fade clears them. Falls back to VB_DEF
+ * when the window is tall enough. */
+export function embedViewBox(w: number, h: number): VB {
+  const vhFit = Math.round((h * 390) / Math.max(1, w));
+  if (vhFit >= 740) return VB_DEF;
+  // solve vh so heads (y=415) sit HEADROOM pt below the window top:
+  // heads_pt = (415 - yTop) * s, s = h/vh → vh = 300 / (1 - HEADROOM/h)
+  const headroom = 120;
+  const vh = Math.min(844, Math.round(300 / Math.max(0.4, 1 - headroom / Math.max(1, h))));
+  const vw = Math.max(390, Math.round((vh * w) / Math.max(1, h)));
+  return { x: (390 - vw) / 2, y: 715 - vh, w: vw, h: vh };
+}
+
 /** xMidYMid slice mapping for a given viewBox. */
 export function sceneXY(w: number, h: number, sx: number, sy: number, vb: VB = VB_DEF) {
   const s = Math.max(w / vb.w, h / vb.h);
@@ -142,12 +157,15 @@ export function GardenScene({
   onObjectPress,
   labels,
   sim,
+  embedded,
 }: {
   g: GardenState;
   onFlowerPress?: (flower: string) => void;
   onObjectPress?: (kind: SceneObject) => void;
   labels?: boolean;
   sim?: SimVisual;
+  /** Rendered inside the bank chrome — bottom-anchor the window when short. */
+  embedded?: boolean;
 }) {
   const v: Variant = variantOf(g);
   const stage = Math.min(4, Math.max(1, sim?.taimiStage ?? g.stage));
@@ -169,8 +187,9 @@ export function GardenScene({
     return () => cancelAnimationFrame(raf);
   }, [sim?.playing]);
 
-  // slice math — in sim mode the viewBox hugs the bottom of the scene
-  const vb = sim && sz ? simViewBox(sz.w, sz.h) : VB_DEF;
+  // slice math — in sim mode the viewBox hugs the bottom of the scene;
+  // embedded (bank chrome) does the same for short windows so the pond stays
+  const vb = sim && sz ? simViewBox(sz.w, sz.h) : embedded && sz ? embedViewBox(sz.w, sz.h) : VB_DEF;
   const scale = sz ? Math.max(sz.w / vb.w, sz.h / vb.h) : 0;
   const ox = sz ? (sz.w - vb.w * scale) / 2 : 0;
   const oy = sz ? (sz.h - vb.h * scale) / 2 : 0;

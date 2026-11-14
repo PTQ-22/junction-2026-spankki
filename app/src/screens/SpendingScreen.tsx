@@ -7,6 +7,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import Svg, { Image as SvgImage } from "react-native-svg";
 
 import { Benchmarks, fetchBenchmarks } from "../api";
+import { BankBar } from "../components/BankChrome";
 import { FlowerSheet } from "../components/FlowerSheet";
 import { ART_SRC, Flower } from "../garden/assets";
 import { OfflineCard, useGarden } from "../offline";
@@ -84,6 +85,7 @@ export function SpendingScreen() {
 
   return (
     <View style={styles.root}>
+      <BankBar />
       <ScrollView contentContainerStyle={styles.pad}>
         <Text style={styles.h}>Where your money went</Text>
         <Text style={styles.sub}>{`Last 30 days · ${g ? euro(total30) : offline ? "—" : "…"}`}</Text>
@@ -167,7 +169,7 @@ export function SpendingScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.paper },
-  pad: { padding: 20, paddingTop: 72, paddingBottom: 40 },
+  pad: { padding: 20, paddingTop: 18, paddingBottom: 40 },
   h: { fontFamily: FONT.display, fontSize: 24, color: C.ink },
   sub: { fontFamily: FONT.body, fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 14 },
   stack: { flexDirection: "row", height: 10, borderRadius: 5, overflow: "hidden", marginBottom: 14 },

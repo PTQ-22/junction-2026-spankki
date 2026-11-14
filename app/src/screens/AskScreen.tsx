@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg from "react-native-svg";
 
 import { ChatReply, fetchChat, GardenState } from "../api";
+import { BankBar } from "../components/BankChrome";
 import { Taimi } from "../garden/assets";
 import { OfflineCard, useGarden } from "../offline";
 import { useDemo } from "../state";
@@ -97,7 +98,8 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <View style={styles.root}>
-      <View style={[styles.hdr, { paddingTop: insets.top + 10 }]}>
+      <BankBar />
+      <View style={[styles.hdr, { paddingTop: 10 }]}>
         <View style={styles.glyphWrap}>
           <Svg width={40} height={40} viewBox="-25 -50 50 56">
             <Taimi stage={g?.stage ?? 2} mood="sun" />

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { fetchPersonas, Persona } from "../api";
+import { BankBar } from "../components/BankChrome";
 import { OfflineCard } from "../offline";
 import { useDemo } from "../state";
 
@@ -45,7 +46,9 @@ export function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
+    <View style={styles.wrap}>
+      <BankBar />
+      <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <Text style={styles.h}>Profile</Text>
 
       <Text style={styles.label}>Your settings</Text>
@@ -129,13 +132,15 @@ export function ProfileScreen() {
           </Pressable>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: { flex: 1, backgroundColor: C.paper },
   root: { flex: 1, backgroundColor: C.paper },
-  pad: { padding: 20, paddingTop: 72, paddingBottom: 40 },
+  pad: { padding: 20, paddingTop: 18, paddingBottom: 40 },
   h: { fontFamily: FONT.display, fontSize: 24, color: C.ink },
   label: {
     fontFamily: FONT.bold,
