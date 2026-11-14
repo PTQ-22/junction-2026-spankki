@@ -12,10 +12,7 @@ import Svg, { Image as SvgImage } from "react-native-svg";
 import { ART_SRC, Birch, Flower, Pond, Taimi } from "../garden/assets";
 import { useDemo } from "../state";
 
-const GREEN = "#007841";
-const INK = "#1F2A24";
-const SUB = "#5C6B62";
-const LINE = "#DDE4DD";
+import { C, FONT, R, SHADOW } from "../theme";
 
 /** Legend rows — shared by intro slide 2 and the Home "?" modal. */
 export function Legend() {
@@ -150,31 +147,30 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 10,
-    backgroundColor: "#F4F6F2",
+    backgroundColor: C.paper,
     paddingHorizontal: 24,
   },
   skip: { alignSelf: "flex-end", padding: 8 },
-  skipTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 14, color: SUB },
+  skipTxt: { fontFamily: FONT.semi, fontSize: 14, color: C.sub },
   body: { flex: 1, justifyContent: "center" },
   hero: { width: 110, height: 150, alignSelf: "center", marginBottom: 10 },
-  title: { fontFamily: "Figtree_700Bold", fontSize: 28, color: INK, marginBottom: 12 },
-  p: { fontFamily: "Figtree_500Medium", fontSize: 15.5, color: SUB, lineHeight: 23 },
+  title: { fontFamily: FONT.display, fontSize: 28, color: C.ink, marginBottom: 12 },
+  p: { fontFamily: FONT.body, fontSize: 15.5, color: C.sub, lineHeight: 23 },
   dots: { flexDirection: "row", justifyContent: "center", gap: 6, marginBottom: 16 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#C9CFC9" },
-  dotOn: { backgroundColor: GREEN },
-  cta: { backgroundColor: GREEN, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
-  ctaTxt: { fontFamily: "Figtree_700Bold", fontSize: 15, color: "#FFFFFF" },
+  dotOn: { backgroundColor: C.green },
+  cta: { backgroundColor: C.green, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
+  ctaTxt: { fontFamily: FONT.bold, fontSize: 15, color: "#FFFFFF" },
   icon: { width: 46, height: 46, marginRight: 12 },
   lrow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: LINE,
+    backgroundColor: C.card,
+    borderRadius: R.card,
     padding: 10,
     marginBottom: 8,
+    ...SHADOW,
   },
-  llabel: { fontFamily: "Figtree_700Bold", fontSize: 14, color: INK },
-  lwhat: { fontFamily: "Figtree_500Medium", fontSize: 12.5, color: SUB, marginTop: 1 },
+  llabel: { fontFamily: FONT.bold, fontSize: 14, color: C.ink },
+  lwhat: { fontFamily: FONT.body, fontSize: 12.5, color: C.sub, marginTop: 1 },
 });

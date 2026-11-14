@@ -2,19 +2,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
-const GREEN = "#007841";
+import { C, FONT } from "../../theme";
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: GREEN,
-        tabBarInactiveTintColor: "#8A968C",
-        tabBarLabelStyle: { fontFamily: "Figtree_600SemiBold", fontSize: 11 },
+        tabBarActiveTintColor: C.spruce,
+        tabBarInactiveTintColor: C.faint,
+        tabBarLabelStyle: { fontFamily: FONT.semi, fontSize: 11 },
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#DDE4DD",
+          backgroundColor: C.paper,
+          borderTopColor: C.line,
           borderTopWidth: 0.5,
         },
       }}

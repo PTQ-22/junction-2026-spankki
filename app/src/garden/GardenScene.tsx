@@ -3,9 +3,9 @@
  * Same layout rules as the prototype: flowers outside x∈[125,265].
  * `sim` overlays the animated what-if state driven by HomeScreen.
  */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LayoutChangeEvent, Pressable, View } from "react-native";
-import Svg, { Ellipse, G, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Defs, Ellipse, G, LinearGradient, RadialGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 import type { FlowerState, GardenState } from "../api";
 import {
@@ -48,7 +48,7 @@ export type SceneObject = "weather" | "bills" | "savings" | "invest" | "taimi" |
 const OBJECT_AREAS: { kind: SceneObject; x0: number; y0: number; x1: number; y1: number }[] = [
   { kind: "weather", x0: 15, y0: 80, x1: 375, y1: 400 },
   { kind: "bills", x0: 10, y0: 430, x1: 300, y1: 575 },
-  { kind: "savings", x0: 10, y0: 585, x1: 165, y1: 720 },
+  { kind: "savings", x0: 10, y0: 598, x1: 165, y1: 716 },
   { kind: "invest", x0: 295, y0: 370, x1: 388, y1: 560 },
   { kind: "taimi", x0: 135, y0: 470, x1: 260, y1: 685 },
 ];
@@ -62,8 +62,8 @@ const pillBox = (text: string, x: number, y: number, end?: boolean) => {
 export const flowerHead = (i: number) => ({ x: FX[i], y: 435 });
 export const flowerIndex = (g: GardenState, name: string) =>
   g.flowers.slice(0, 5).findIndex((f) => f.flower === name);
-export const POND_POS = { x: 88, y: 645 };
-export const POCKET_POS = { x: 88, y: 575 };
+export const POND_POS = { x: 88, y: 662 };
+export const POCKET_POS = { x: 88, y: 620 };
 
 export interface VB {
   x: number;
@@ -102,6 +102,7 @@ export interface SimVisual {
   taimiStage: number;
   taimiScale: number;
   warm: boolean;
+  playing?: boolean;
 }
 
 const variantOf = (g: GardenState): Variant =>
@@ -154,6 +155,19 @@ export function GardenScene({
   const pondLevel = sim?.pondLevel ?? pondRatio;
   const rw = g.next_rent_window;
   const [sz, setSz] = useState<{ w: number; h: number } | null>(null);
+  // soft pulse on the selected-flower glow while the sim plays
+  const [glowK, setGlowK] = useState(1);
+  useEffect(() => {
+    if (!sim?.playing) return;
+    const t0 = Date.now();
+    let raf = 0;
+    const step = () => {
+      setGlowK(1 + 0.1 * Math.sin(((Date.now() - t0) / 850) * Math.PI * 2));
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [sim?.playing]);
 
   // slice math — in sim mode the viewBox hugs the bottom of the scene
   const vb = sim && sz ? simViewBox(sz.w, sz.h) : VB_DEF;
@@ -169,9 +183,20 @@ export function GardenScene({
         setSz({ w: width, h: height });
       }}
     >
+      {sz && <Backdrop variant={v} vb={vb} ox={ox} oy={oy} scale={scale} />}
       <Svg viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
-      <Backdrop variant={v} vb={vb} />
-      {sim?.warm && <Rect x={-200} y={60} width={790} height={844} fill="#FFDF9E" opacity={0.12} />}
+      <Defs>
+        <RadialGradient id="selGlow" cx="50%" cy="50%" rx="50%" ry="50%" fx="50%" fy="50%">
+          <Stop offset="0" stopColor="#FFE0A0" stopOpacity="0.7" />
+          <Stop offset="0.55" stopColor="#FFE0A0" stopOpacity="0.3" />
+          <Stop offset="1" stopColor="#FFE0A0" stopOpacity="0" />
+        </RadialGradient>
+        <LinearGradient id="moodVeil" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#2E4159" stopOpacity="0" />
+          <Stop offset="0.15" stopColor="#2E4159" stopOpacity={v === "storm" ? 0.18 : 0.07} />
+          <Stop offset="1" stopColor="#2E4159" stopOpacity={v === "storm" ? 0.18 : 0.07} />
+        </LinearGradient>
+      </Defs>
       {g.invest_total > 0 ? (
         <G x={344} y={545}>
           <Birch berries />
@@ -189,11 +214,11 @@ export function GardenScene({
           windowText={`next ~${rw.d0}–${rw.d1} ${rw.month}`}
         />
       </G>
-      <G x={88} y={668}>
+      <G x={88} y={700}>
         <Pond level={pondLevel} variant={v} />
       </G>
       {sim && sim.pocket > 0 && (
-        <ScenePill x={42} y={596} text={`pocket +${Math.round(sim.pocket)} €`} bg="#F7E7B0" fg="#6B5718" />
+        <ScenePill x={42} y={640} text={`pocket +${Math.round(sim.pocket)} €`} bg="#F7E7B0" fg="#6B5718" />
       )}
       <Ellipse
         cx="195"
@@ -217,7 +242,11 @@ export function GardenScene({
             opacity={sim && !sel ? 0.45 : 1}
           >
             <Ellipse cx="0" cy="-1" rx="15" ry="2.6" fill={pal("shade", v)} opacity={0.5} />
-            {sel && <Ellipse cy={-46} rx={24} ry={30} fill="#FFE9A8" opacity={0.4} />}
+            {sel && (
+              <G scale={glowK}>
+                <Ellipse cy={-46} rx={40} ry={46} fill="url(#selGlow)" />
+              </G>
+            )}
             <Flower
               category={f.flower}
               state={sel ? sim!.flowerState : f.norm === 0 && f.last30 === 0 ? "dormant" : f.state}
@@ -225,25 +254,28 @@ export function GardenScene({
           </G>
         );
       })}
-      {/* cool veil over the ground band so sprites sit in storm/cloud light */}
-      {v !== "sun" && (
-        <Rect x={-200} y={420} width={790} height={484} fill="#2E4159" opacity={v === "storm" ? 0.18 : 0.07} />
+      {/* cool veil over the ground band so sprites sit in storm/cloud light —
+          soft gradient top edge, no visible rectangle */}
+      {v !== "sun" && !sim && (
+        <Rect x={-200} y={400} width={790} height={1400} fill="url(#moodVeil)" />
       )}
       {v === "storm" && <Rain />}
       {labels && !sim && (
         <G>
           <ScenePill x={52} y={448} text="Bills ›" />
-          <ScenePill x={42} y={596} text="Savings ›" />
+          <ScenePill x={42} y={640} text="Savings ›" />
           <ScenePill x={378} y={486} end text={`${g.invest_total > 0 ? "Investments" : "No investments yet"} ›`} />
         </G>
       )}
-      {/* tiny name tag under each flower */}
+      {/* tiny name tag under each flower — in sim only the selected one,
+          so no pale boxes float over the scene */}
       {g.flowers.slice(0, 5).map((f, i) => {
+        if (sim && sim.selected !== f.flower) return null;
         const name = FLOWER_SHORT[f.flower] ?? f.flower;
         const w = name.length * 5.8 + 12;
         const y = i % 2 === 0 ? 588 : 604;
         return (
-          <G key={`tag-${f.flower}`} opacity={sim && sim.selected !== f.flower ? 0.45 : 0.9}>
+          <G key={`tag-${f.flower}`} opacity={0.9}>
             <Rect x={FX[i] - w / 2} y={y} width={w} height={13} rx={6.5} fill="#FFFFFF" opacity={0.78} />
             <SvgText x={FX[i]} y={y + 10} textAnchor="middle" fontSize={8.5} fontWeight="700" fill="#40514A">
               {name}
@@ -278,7 +310,7 @@ export function GardenScene({
             onObjectPress &&
             [
               pillBox("Bills ›", 52, 448),
-              pillBox("Savings ›", 42, 596),
+              pillBox("Savings ›", 42, 640),
               pillBox(`${g.invest_total > 0 ? "Investments" : "No investments yet"} ›`, 378, 486, true),
             ].map((b, i) => (
               <Pressable

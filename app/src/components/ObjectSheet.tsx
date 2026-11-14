@@ -5,17 +5,58 @@
  */
 import React from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Svg, { G, Image as SvgImage } from "react-native-svg";
 
 import type { GardenState } from "../api";
+import { ART_SRC, Birch, InvestSapling, Pond, RailPlate } from "../garden/assets";
 
-const GREEN = "#007841";
-const INK = "#1F2A24";
-const SUB = "#5C6B62";
+import { C, FONT, R, SHADOW } from "../theme";
 const NBSP = " ";
 
 const euro = (n: number) => `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}${NBSP}€`;
 
 export type ObjKind = "bills" | "savings" | "invest" | "weather";
+
+/** Painted icon for the sheet header — the same slot the scene draws. */
+function ObjIcon({ kind, g }: { kind: ObjKind; g: GardenState }) {
+  const st = { width: 44, height: 44 } as const;
+  if (kind === "bills")
+    return (
+      <Svg viewBox="-46 -88 92 92" style={st}>
+        <RailPlate
+          variant="sun"
+          rent={g.rent}
+          paid={g.rent_paid}
+          windowText={`next ~${g.next_rent_window.d0}–${g.next_rent_window.d1} ${g.next_rent_window.month}`}
+        />
+      </Svg>
+    );
+  if (kind === "savings")
+    return (
+      <Svg viewBox="-60 -60 120 64" style={st}>
+        <G scale={0.85}>
+          <Pond level={g.pond_target > 0 ? g.pond_fill / g.pond_target : 0} variant="sun" />
+        </G>
+      </Svg>
+    );
+  if (kind === "invest")
+    return g.invest_total > 0 ? (
+      <Svg viewBox="-26 -66 52 70" style={st}>
+        <G scale={0.4}>
+          <Birch />
+        </G>
+      </Svg>
+    ) : (
+      <Svg viewBox="-18 -56 36 60" style={st}>
+        <InvestSapling />
+      </Svg>
+    );
+  return (
+    <Svg viewBox="0 0 40 40" style={st}>
+      <SvgImage href={ART_SRC("bg-sun")} x={0} y={0} width={40} height={71.7} preserveAspectRatio="xMidYMin slice" />
+    </Svg>
+  );
+}
 
 export function ObjectSheet({
   kind,
@@ -81,7 +122,10 @@ export function ObjectSheet({
       <View style={styles.sheet}>
         <View style={styles.handle} />
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>{title}</Text>
+          <View style={styles.titleRow}>
+            <ObjIcon kind={kind} g={g} />
+            <Text style={styles.title}>{title}</Text>
+          </View>
           {empty ? (
             <Text style={styles.empty}>{empty}</Text>
           ) : (
@@ -103,18 +147,20 @@ export function ObjectSheet({
 const styles = StyleSheet.create({
   back: { flex: 1 },
   sheet: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: C.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 10,
     maxHeight: "55%",
+    ...SHADOW,
   },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: "#D8DDD8", alignSelf: "center", marginBottom: 14 },
-  title: { fontFamily: "Figtree_700Bold", fontSize: 20, color: INK, marginBottom: 12 },
-  row: { flexDirection: "row", alignItems: "center", paddingVertical: 9, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#DDE4DD" },
-  rowLbl: { fontFamily: "Figtree_500Medium", fontSize: 13.5, color: SUB, flex: 1 },
-  rowVal: { fontFamily: "Figtree_700Bold", fontSize: 13.5, color: INK, fontVariant: ["tabular-nums"] },
-  empty: { fontFamily: "Figtree_500Medium", fontSize: 14, color: SUB, marginTop: 6 },
-  note: { fontFamily: "Figtree_500Medium", fontSize: 12.5, color: GREEN, marginTop: 16, lineHeight: 18 },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.line, alignSelf: "center", marginBottom: 14 },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
+  title: { fontFamily: FONT.display, fontSize: 20, color: C.ink },
+  row: { flexDirection: "row", alignItems: "center", paddingVertical: 9, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.line },
+  rowLbl: { fontFamily: FONT.body, fontSize: 13.5, color: C.sub, flex: 1 },
+  rowVal: { fontFamily: FONT.bold, fontSize: 13.5, color: C.ink, fontVariant: ["tabular-nums"] },
+  empty: { fontFamily: FONT.body, fontSize: 14, color: C.sub, marginTop: 6 },
+  note: { fontFamily: FONT.body, fontSize: 12.5, color: C.spruce, marginTop: 16, lineHeight: 18 },
 });

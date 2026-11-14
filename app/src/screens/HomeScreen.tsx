@@ -3,6 +3,7 @@
  * Sim mode: the what-if plays out ON the garden — coins into the pond,
  * the flower recovers, the counter ticks up month by month.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -27,12 +28,8 @@ import { ObjectSheet, ObjKind } from "../components/ObjectSheet";
 import { Legend } from "../components/Intro";
 import { flowerHead, flowerIndex, GardenScene, POCKET_POS, POND_POS, sceneXY, simViewBox } from "../garden/GardenScene";
 import { useDemo } from "../state";
+import { C, FONT, R, SHADOW } from "../theme";
 
-const GREEN = "#007841";
-const INK = "#1F2A24";
-const SUB = "#5C6B62";
-const FAINT = "#8A968C";
-const LINE = "#DDE4DD";
 const NBSP = " ";
 const MONTHS_N = 6;
 
@@ -172,8 +169,8 @@ function CutSlider({ value, onChange }: { value: number; onChange: (v: number) =
       }}
       {...pan.panHandlers}
     >
-      <View style={{ height: 4, borderRadius: 2, backgroundColor: LINE }}>
-        <View style={{ height: 4, borderRadius: 2, backgroundColor: GREEN, width: `${value * 200}%` }} />
+      <View style={{ height: 4, borderRadius: 2, backgroundColor: C.line }}>
+        <View style={{ height: 4, borderRadius: 2, backgroundColor: C.green, width: `${value * 200}%` }} />
       </View>
       <View
         style={{
@@ -183,7 +180,7 @@ function CutSlider({ value, onChange }: { value: number; onChange: (v: number) =
           width: 24,
           height: 24,
           borderRadius: 12,
-          backgroundColor: GREEN,
+          backgroundColor: C.green,
           borderWidth: 3,
           borderColor: "#FFFFFF",
         }}
@@ -459,6 +456,7 @@ export function HomeScreen() {
           taimiStage: month >= sim.months ? sim.future.stage : sim.today.stage,
           taimiScale,
           warm: sim.eur_per_day_future > sim.eur_per_day_now,
+          playing,
         }
       : simMode && g
         ? {
@@ -470,6 +468,7 @@ export function HomeScreen() {
             taimiStage: g.stage,
             taimiScale,
             warm: false,
+            playing,
           }
         : undefined;
 
@@ -492,8 +491,8 @@ export function HomeScreen() {
     setObjSheet(kind as ObjKind);
   };
 
-  const hInk = g?.storm ? "#EDF2F5" : INK;
-  const hSub = g?.storm ? "#B9C6D0" : SUB;
+  const hInk = g?.storm ? "#EDF2F5" : C.ink;
+  const hSub = g?.storm ? "#B9C6D0" : C.sub;
   const fade0 = g?.storm ? "rgba(28,42,60,0.72)" : "rgba(238,244,240,0.78)";
   const fade1 = g?.storm ? "rgba(28,42,60,0.36)" : "rgba(238,244,240,0.40)";
   const fade2 = g?.storm ? "rgba(28,42,60,0.15)" : "rgba(238,244,240,0.16)";
@@ -509,7 +508,7 @@ export function HomeScreen() {
           <GardenScene g={g} onFlowerPress={onFlowerPress} onObjectPress={onObjectPress} labels sim={simVisual} />
         ) : (
           <View style={styles.loading}>
-            {err ? <Text style={styles.err}>{err}</Text> : <ActivityIndicator color={GREEN} />}
+            {err ? <Text style={styles.err}>{err}</Text> : <ActivityIndicator color={C.green} />}
           </View>
         )}
         {coins.map((c) => (
@@ -630,7 +629,8 @@ export function HomeScreen() {
               }}
               accessibilityRole="button"
             >
-              <Text style={styles.ctaTxt}>{playing ? "Playing…" : "▶ Play 6 months"}</Text>
+              {!playing && <Ionicons name="play" size={13} color="#FFFFFF" />}
+              <Text style={styles.ctaTxt}>{playing ? "Playing…" : "Play 6 months"}</Text>
             </Pressable>
             <Pressable
               style={styles.ghost}
@@ -714,33 +714,33 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#C6D4DA" },
+  root: { flex: 1, backgroundColor: C.paper },
   header: { position: "absolute", top: 0, left: 0, right: 0, zIndex: 6, paddingHorizontal: 20, paddingBottom: 8 },
-  headline: { fontFamily: "Figtree_700Bold", fontSize: 24, color: INK },
+  headline: { fontFamily: FONT.display, fontSize: 24, color: C.ink },
   headLabel: {
-    fontFamily: "Figtree_700Bold",
+    fontFamily: FONT.bold,
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.8,
-    color: SUB,
+    color: C.sub,
   },
   headNum: {
-    fontFamily: "Figtree_700Bold",
+    fontFamily: FONT.display,
     fontSize: 44,
     letterSpacing: -1,
-    color: INK,
+    color: C.ink,
     fontVariant: ["tabular-nums"],
     marginTop: 2,
   },
   headLabelSim: {
-    fontFamily: "Figtree_600SemiBold",
+    fontFamily: FONT.semi,
     fontSize: 13,
-    color: SUB,
+    color: C.sub,
   },
-  headSub: { fontFamily: "Figtree_500Medium", fontSize: 13, color: SUB, marginTop: 3 },
+  headSub: { fontFamily: FONT.body, fontSize: 13, color: C.sub, marginTop: 3 },
   sceneWrap: { flex: 1 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  err: { color: INK, fontFamily: "Figtree_500Medium" },
+  err: { color: C.ink, fontFamily: FONT.body },
   help: {
     position: "absolute",
     top: 10,
@@ -752,58 +752,63 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  helpTxt: { fontFamily: "Figtree_700Bold", fontSize: 14, color: SUB },
+  helpTxt: { fontFamily: FONT.bold, fontSize: 14, color: C.sub },
   panel: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: C.card,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 12,
+    ...SHADOW,
   },
-  note: { fontFamily: "Figtree_600SemiBold", fontSize: 14, color: INK, lineHeight: 20 },
+  note: { fontFamily: FONT.semi, fontSize: 14, color: C.ink, lineHeight: 20 },
   actions: { flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" },
   cta: {
     flex: 1,
-    backgroundColor: GREEN,
+    backgroundColor: C.green,
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
   },
-  ctaTxt: { fontFamily: "Figtree_700Bold", fontSize: 14, color: "#FFFFFF" },
+  ctaTxt: { fontFamily: FONT.bold, fontSize: 14, color: "#FFFFFF" },
   ghost: { justifyContent: "center", paddingHorizontal: 10 },
-  ghostTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 13.5, color: GREEN },
+  ghostTxt: { fontFamily: FONT.semi, fontSize: 13.5, color: C.spruce },
   tiles: { flexDirection: "row", gap: 8, marginTop: 12 },
   tile: {
     flex: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: LINE,
-    borderRadius: 12,
+    backgroundColor: C.card,
+    borderRadius: R.card,
     padding: 10,
+    ...SHADOW,
   },
   tileLbl: {
-    fontFamily: "Figtree_700Bold",
+    fontFamily: FONT.bold,
     fontSize: 10,
     textTransform: "uppercase",
     letterSpacing: 0.6,
-    color: FAINT,
+    color: C.faint,
   },
-  tileVal: { fontFamily: "Figtree_700Bold", fontSize: 16, color: INK, marginTop: 3, fontVariant: ["tabular-nums"] },
-  tileSub: { fontFamily: "Figtree_500Medium", fontSize: 10.5, color: SUB, marginTop: 1 },
+  tileVal: { fontFamily: FONT.bold, fontSize: 16, color: C.ink, marginTop: 3, fontVariant: ["tabular-nums"] },
+  tileSub: { fontFamily: FONT.body, fontSize: 10.5, color: C.sub, marginTop: 1 },
   legBack: { flex: 1, backgroundColor: "rgba(20,30,24,0.35)" },
   legCard: {
     position: "absolute",
     left: 16,
     right: 16,
     top: "18%",
-    backgroundColor: "#F4F6F2",
+    backgroundColor: C.card,
     borderRadius: 20,
     padding: 18,
+    ...SHADOW,
   },
-  legTitle: { fontFamily: "Figtree_700Bold", fontSize: 19, color: INK, marginBottom: 12 },
-  legHint: { fontFamily: "Figtree_500Medium", fontSize: 12, color: SUB, textAlign: "center", marginTop: 10 },
+  legTitle: { fontFamily: FONT.display, fontSize: 19, color: C.ink, marginBottom: 12 },
+  legHint: { fontFamily: FONT.body, fontSize: 12, color: C.sub, textAlign: "center", marginTop: 10 },
   legClose: { alignSelf: "center", paddingVertical: 10, paddingHorizontal: 20 },
-  legCloseTxt: { fontFamily: "Figtree_700Bold", fontSize: 14, color: GREEN },
+  legCloseTxt: { fontFamily: FONT.bold, fontSize: 14, color: C.green },
   // sim mode
   coin: {
     width: 16,
@@ -811,45 +816,45 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   floatTxt: {
-    fontFamily: "Figtree_700Bold",
+    fontFamily: FONT.bold,
     fontSize: 15,
     color: "#7A5C14",
     fontVariant: ["tabular-nums"],
   },
   chip: {
     borderWidth: 1,
-    borderColor: LINE,
-    borderRadius: 999,
+    borderColor: "transparent",
+    borderRadius: R.chip,
     paddingHorizontal: 13,
     paddingVertical: 5,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: C.sageSoft,
   },
-  chipOn: { backgroundColor: "#E4F0E6", borderColor: GREEN },
-  chipTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 12.5, color: INK },
-  chipTxtOn: { color: GREEN },
+  chipOn: { borderColor: C.sage },
+  chipTxt: { fontFamily: FONT.semi, fontSize: 12.5, color: C.ink },
+  chipTxtOn: { color: C.spruce },
   sliderRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 8 },
-  cutLbl: { fontFamily: "Figtree_700Bold", fontSize: 13, color: INK, width: 48, textAlign: "right" },
-  cutSub: { fontFamily: "Figtree_500Medium", fontSize: 11, color: SUB, marginTop: 1 },
+  cutLbl: { fontFamily: FONT.bold, fontSize: 13, color: C.ink, width: 48, textAlign: "right" },
+  cutSub: { fontFamily: FONT.body, fontSize: 11, color: C.sub, marginTop: 1 },
   scrub: { flexDirection: "row", gap: 4, marginTop: 8 },
   scrubItem: {
     flex: 1,
     borderRadius: 8,
     paddingVertical: 4,
     alignItems: "center",
-    backgroundColor: "#F2F4F0",
+    backgroundColor: C.sageSoft,
   },
-  scrubOn: { backgroundColor: GREEN },
-  scrubTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 9.5, color: SUB },
+  scrubOn: { backgroundColor: C.spruce },
+  scrubTxt: { fontFamily: FONT.semi, fontSize: 9.5, color: C.sub },
   scrubTxtOn: { color: "#FFFFFF" },
-  honest: { fontFamily: "Figtree_500Medium", fontSize: 10, color: FAINT, marginTop: 6 },
+  honest: { fontFamily: FONT.body, fontSize: 10, color: C.faint, marginTop: 6 },
   toast: {
     position: "absolute",
     bottom: 110,
     alignSelf: "center",
-    backgroundColor: INK,
+    backgroundColor: C.ink,
     borderRadius: 999,
     paddingVertical: 9,
     paddingHorizontal: 18,
   },
-  toastTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 13, color: "#FFFFFF" },
+  toastTxt: { fontFamily: FONT.semi, fontSize: 13, color: "#FFFFFF" },
 });

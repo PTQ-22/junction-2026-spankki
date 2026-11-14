@@ -7,10 +7,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchPersonas, Persona } from "../api";
 import { useDemo } from "../state";
 
-const GREEN = "#007841";
-const INK = "#1F2A24";
-const SUB = "#5C6B62";
-const FAINT = "#8A968C";
+import { C, FONT, R, SHADOW } from "../theme";
 
 const TODAYS = ["2026-09-15", "2026-09-01", "2026-08-15", "2026-06-15"];
 const SAVE_PCTS = [0, 0.05, 0.1];
@@ -79,53 +76,54 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F4F6F2" },
+  root: { flex: 1, backgroundColor: C.paper },
   pad: { padding: 20, paddingTop: 72, paddingBottom: 40 },
-  h: { fontFamily: "Figtree_700Bold", fontSize: 24, color: INK },
+  h: { fontFamily: FONT.display, fontSize: 24, color: C.ink },
   label: {
-    fontFamily: "Figtree_700Bold",
+    fontFamily: FONT.bold,
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.8,
-    color: SUB,
+    color: C.sub,
     marginTop: 22,
     marginBottom: 6,
   },
-  sub2: { fontFamily: "Figtree_500Medium", fontSize: 12.5, color: SUB, lineHeight: 18, marginBottom: 10 },
-  subLbl: { fontFamily: "Figtree_600SemiBold", fontSize: 12.5, color: INK, marginTop: 14, marginBottom: 8 },
+  sub2: { fontFamily: FONT.body, fontSize: 12.5, color: C.sub, lineHeight: 18, marginBottom: 10 },
+  subLbl: { fontFamily: FONT.semi, fontSize: 12.5, color: C.ink, marginTop: 14, marginBottom: 8 },
   introBtn: {
     marginTop: 16,
-    borderWidth: 1,
-    borderColor: "#DDE4DD",
-    borderRadius: 12,
+    borderRadius: R.card,
     paddingVertical: 12,
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: C.card,
+    ...SHADOW,
   },
-  introTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 14, color: GREEN },
+  introTxt: { fontFamily: FONT.semi, fontSize: 14, color: C.spruce },
   row: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#DDE4DD",
+    backgroundColor: C.card,
+    borderRadius: R.card,
+    borderWidth: 1,
+    borderColor: "transparent",
     padding: 13,
     marginBottom: 8,
+    ...SHADOW,
   },
-  rowOn: { borderColor: GREEN, borderWidth: 1.5 },
-  rowTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 14, color: INK },
-  rowTxtOn: { color: GREEN },
+  rowOn: { borderColor: C.sage, borderWidth: 1.5 },
+  rowTxt: { fontFamily: FONT.semi, fontSize: 14, color: C.ink },
+  rowTxtOn: { color: C.spruce },
   seg: { flexDirection: "row", gap: 8 },
   segBtn: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#DDE4DD",
+    backgroundColor: C.card,
+    borderRadius: R.card,
+    borderWidth: 1,
+    borderColor: "transparent",
     paddingVertical: 10,
     alignItems: "center",
+    ...SHADOW,
   },
-  segOn: { borderColor: GREEN, borderWidth: 1.5 },
-  segTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 13, color: INK },
-  segTxtOn: { color: GREEN },
-  dim: { fontFamily: "Figtree_500Medium", fontSize: 12, color: FAINT, marginTop: 8 },
+  segOn: { borderColor: C.sage, borderWidth: 1.5 },
+  segTxt: { fontFamily: FONT.semi, fontSize: 13, color: C.ink },
+  segTxtOn: { color: C.spruce },
+  dim: { fontFamily: FONT.body, fontSize: 12, color: C.faint, marginTop: 8 },
 });

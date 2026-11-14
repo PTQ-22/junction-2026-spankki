@@ -24,10 +24,7 @@ import { ChatReply, fetchChat, fetchGarden, GardenState } from "../api";
 import { Taimi } from "../garden/assets";
 import { useDemo } from "../state";
 
-const GREEN = "#007841";
-const INK = "#1F2A24";
-const SUB = "#5C6B62";
-const LINE = "#DDE4DD";
+import { C, FONT, R, SHADOW } from "../theme";
 
 const QUESTIONS = [
   "How much did I spend on taxis last month?",
@@ -130,7 +127,13 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
         {msgs.map((m, i) => (
           <View key={i}>
             {m.role === "taimi" ? (
-              <View style={styles.card}>
+              <View style={styles.cardRow}>
+                <View style={styles.avatar}>
+                  <Svg width={26} height={26} viewBox="-16 -34 32 38">
+                    <Taimi stage={g?.stage ?? 2} mood="sun" />
+                  </Svg>
+                </View>
+                <View style={styles.card}>
                 <Text style={styles.cardLbl}>Taimi</Text>
                 <Text style={styles.cardTxt}>{m.text}</Text>
                 <View style={styles.recRow}>
@@ -167,6 +170,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
                     <Text style={styles.gardenBtnTxt}>Show me in my garden</Text>
                   </Pressable>
                 )}
+                </View>
               </View>
             ) : (
               <View style={styles.pill}>
@@ -175,7 +179,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
             )}
           </View>
         ))}
-        {busy && <ActivityIndicator color={GREEN} style={{ marginVertical: 10 }} />}
+        {busy && <ActivityIndicator color={C.green} style={{ marginVertical: 10 }} />}
       </ScrollView>
 
       <KeyboardAvoidingView
@@ -205,7 +209,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
               setDraft(t);
             }}
             placeholder="Ask about your money…"
-            placeholderTextColor={SUB}
+            placeholderTextColor={C.sub}
             onSubmitEditing={() => ask(draftRef.current)}
             submitBehavior="submit"
             returnKeyType="send"
@@ -238,7 +242,7 @@ function greeting(g: GardenState): string {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F4F6F2" },
+  root: { flex: 1, backgroundColor: C.paper },
   hdr: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -246,13 +250,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: LINE,
+    borderBottomColor: C.line,
   },
   glyphWrap: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#E4F0E6",
+    backgroundColor: C.sageSoft,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -262,51 +266,71 @@ const styles = StyleSheet.create({
     width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(255,255,255,0.85)",
     alignItems: "center", justifyContent: "center",
   },
-  closeTxt: { fontSize: 13, color: INK },
-  bandTitle: { fontFamily: "Figtree_700Bold", fontSize: 17, color: INK },
+  closeTxt: { fontSize: 13, color: C.ink },
+  bandTitle: { fontFamily: FONT.display, fontSize: 17, color: C.ink },
   hdrSub: {
-    fontFamily: "Figtree_500Medium", fontSize: 12.5, color: SUB, lineHeight: 18,
+    fontFamily: FONT.body, fontSize: 12.5, color: C.sub, lineHeight: 18,
     marginTop: 2,
   },
-  card: {
-    backgroundColor: "#FFFFFF", borderRadius: 16, borderWidth: 1, borderColor: LINE,
-    padding: 12, marginBottom: 10, alignSelf: "flex-start", maxWidth: "92%",
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginBottom: 10,
+    maxWidth: "94%",
   },
-  cardLbl: { fontFamily: "Figtree_700Bold", fontSize: 10.5, textTransform: "uppercase", letterSpacing: 0.8, color: GREEN, marginBottom: 4 },
-  cardTxt: { fontFamily: "Figtree_500Medium", fontSize: 14, color: INK, lineHeight: 20 },
-  rec: { fontFamily: "Figtree_600SemiBold", fontSize: 12, color: GREEN, marginTop: 8 },
+  avatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: C.sageSoft,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    marginTop: 3,
+  },
+  card: {
+    flex: 1,
+    backgroundColor: C.card, borderRadius: R.card,
+    padding: 12, alignSelf: "flex-start",
+    ...SHADOW,
+  },
+  cardLbl: { fontFamily: FONT.bold, fontSize: 10.5, textTransform: "uppercase", letterSpacing: 0.8, color: C.green, marginBottom: 4 },
+  cardTxt: { fontFamily: FONT.body, fontSize: 14, color: C.ink, lineHeight: 20 },
+  rec: { fontFamily: FONT.semi, fontSize: 12, color: C.green, marginTop: 8 },
   recRow: { flexDirection: "row", alignItems: "center" },
-  prov: { fontFamily: "Figtree_500Medium", fontSize: 10.5, color: SUB, opacity: 0.6, marginTop: 8 },
-  gardenBtn: { marginTop: 10, backgroundColor: GREEN, borderRadius: 10, paddingVertical: 9, alignItems: "center" },
-  gardenBtnTxt: { fontFamily: "Figtree_700Bold", fontSize: 13, color: "#FFFFFF" },
+  prov: { fontFamily: FONT.body, fontSize: 10.5, color: C.sub, opacity: 0.6, marginTop: 8 },
+  gardenBtn: { marginTop: 10, backgroundColor: C.green, borderRadius: 10, paddingVertical: 9, alignItems: "center" },
+  gardenBtnTxt: { fontFamily: FONT.bold, fontSize: 13, color: "#FFFFFF" },
   txRow: { flexDirection: "row", paddingVertical: 4, gap: 8 },
-  txD: { fontFamily: "Figtree_500Medium", fontSize: 11.5, color: SUB, width: 90 },
-  txM: { fontFamily: "Figtree_500Medium", fontSize: 11.5, color: INK, flex: 1 },
-  txE: { fontFamily: "Figtree_700Bold", fontSize: 11.5, color: INK },
-  sql: { fontFamily: "Courier", fontSize: 9.5, color: SUB, marginTop: 6 },
+  txD: { fontFamily: FONT.body, fontSize: 11.5, color: C.sub, width: 90 },
+  txM: { fontFamily: FONT.body, fontSize: 11.5, color: C.ink, flex: 1 },
+  txE: { fontFamily: FONT.bold, fontSize: 11.5, color: C.ink },
+  sql: { fontFamily: "Courier", fontSize: 9.5, color: C.sub, marginTop: 6 },
   pill: {
-    backgroundColor: "#DDEBD8", borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10,
+    backgroundColor: C.sageSoft, borderRadius: R.card, paddingHorizontal: 14, paddingVertical: 10,
     marginBottom: 10, alignSelf: "flex-end", maxWidth: "85%",
   },
-  pillTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 13.5, color: "#2A4A2E" },
-  quick: { borderTopWidth: 1, borderTopColor: LINE, paddingVertical: 10, flexGrow: 0 },
+  pillTxt: { fontFamily: FONT.semi, fontSize: 13.5, color: C.spruce },
+  quick: { borderTopWidth: 1, borderTopColor: C.line, paddingVertical: 10, flexGrow: 0 },
   qBtn: {
-    backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1, borderColor: LINE,
+    backgroundColor: C.sageSoft, borderRadius: R.chip,
     paddingVertical: 9, paddingHorizontal: 14, alignItems: "center",
   },
-  qTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 13, color: INK },
+  qTxt: { fontFamily: FONT.semi, fontSize: 13, color: C.spruce },
   inputRow: {
     flexDirection: "row", alignItems: "center", gap: 8,
     paddingHorizontal: 12, paddingTop: 4,
   },
   input: {
-    flex: 1, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1, borderColor: LINE,
+    flex: 1, backgroundColor: C.card, borderRadius: R.chip,
     paddingHorizontal: 16, paddingVertical: 10,
-    fontFamily: "Figtree_500Medium", fontSize: 14, color: INK,
+    fontFamily: FONT.body, fontSize: 14, color: C.ink,
+    ...SHADOW,
   },
   send: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: GREEN,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: C.green,
     alignItems: "center", justifyContent: "center",
   },
-  sendTxt: { fontFamily: "Figtree_700Bold", fontSize: 18, color: "#FFFFFF", marginTop: -2 },
+  sendTxt: { fontFamily: FONT.bold, fontSize: 18, color: "#FFFFFF", marginTop: -2 },
 });

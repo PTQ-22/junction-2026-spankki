@@ -4,13 +4,12 @@
  */
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Svg from "react-native-svg";
 
 import { fetchTransactions, FlowerState, TxResult } from "../api";
+import { Flower } from "../garden/assets";
 
-const GREEN = "#007841";
-const INK = "#1F2A24";
-const SUB = "#5C6B62";
-const LINE = "#DDE4DD";
+import { C, FONT, R, SHADOW } from "../theme";
 const NBSP = " ";
 
 const euro = (n: number) => `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}${NBSP}€`;
@@ -57,6 +56,9 @@ export function FlowerSheet({
         <View style={styles.handle} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.titleRow}>
+            <Svg viewBox="-20 -54 40 57" style={styles.thumb}>
+              <Flower category={flower.flower} state={st} />
+            </Svg>
             <Text style={styles.title}>{flower.flower}</Text>
             <View style={styles.pill}>
               <Text style={styles.pillTxt}>{WORD[st]}</Text>
@@ -111,36 +113,38 @@ export function FlowerSheet({
 const styles = StyleSheet.create({
   back: { flex: 1 },
   sheet: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: C.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 10,
     maxHeight: "62%",
+    ...SHADOW,
   },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: "#D8DDD8", alignSelf: "center", marginBottom: 14 },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: C.line, alignSelf: "center", marginBottom: 14 },
   titleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  title: { fontFamily: "Figtree_700Bold", fontSize: 20, color: INK },
-  pill: { backgroundColor: "#E4EBDF", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  pillTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 11, color: "#4A5B45" },
+  thumb: { width: 28, height: 36 },
+  title: { fontFamily: FONT.display, fontSize: 20, color: C.ink },
+  pill: { backgroundColor: C.sageSoft, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  pillTxt: { fontFamily: FONT.semi, fontSize: 11, color: C.spruce },
   bigRow: { flexDirection: "row", alignItems: "baseline", gap: 8, marginTop: 10 },
-  big: { fontFamily: "Figtree_700Bold", fontSize: 32, color: INK, fontVariant: ["tabular-nums"] },
-  vs: { fontFamily: "Figtree_500Medium", fontSize: 12, color: SUB },
+  big: { fontFamily: FONT.display, fontSize: 32, color: C.ink, fontVariant: ["tabular-nums"] },
+  vs: { fontFamily: FONT.body, fontSize: 12, color: C.sub },
   cmpRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
-  cmpLbl: { fontFamily: "Figtree_600SemiBold", fontSize: 11, color: SUB, width: 64 },
-  trk: { flex: 1, height: 8, borderRadius: 4, backgroundColor: "#EEF1EA", overflow: "hidden" },
+  cmpLbl: { fontFamily: FONT.semi, fontSize: 11, color: C.sub, width: 64 },
+  trk: { flex: 1, height: 8, borderRadius: 4, backgroundColor: "#EDE8DA", overflow: "hidden" },
   trkFill: { height: 8, borderRadius: 4 },
-  cmpVal: { fontFamily: "Figtree_700Bold", fontSize: 11, color: INK, width: 56, textAlign: "right", fontVariant: ["tabular-nums"] },
-  eq: { fontFamily: "Figtree_600SemiBold", fontSize: 12.5, color: SUB, marginTop: 10 },
-  secH: { fontFamily: "Figtree_700Bold", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8, color: SUB, marginTop: 18, marginBottom: 6 },
-  txRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: LINE },
-  txD: { fontFamily: "Figtree_500Medium", fontSize: 12.5, color: SUB, width: 96 },
-  txM: { fontFamily: "Figtree_500Medium", fontSize: 12.5, color: INK, flex: 1 },
-  txE: { fontFamily: "Figtree_700Bold", fontSize: 12.5, color: INK, fontVariant: ["tabular-nums"] },
-  dim: { fontFamily: "Figtree_500Medium", fontSize: 12, color: SUB, marginTop: 4 },
+  cmpVal: { fontFamily: FONT.bold, fontSize: 11, color: C.ink, width: 56, textAlign: "right", fontVariant: ["tabular-nums"] },
+  eq: { fontFamily: FONT.semi, fontSize: 12.5, color: C.sub, marginTop: 10 },
+  secH: { fontFamily: FONT.bold, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8, color: C.sub, marginTop: 18, marginBottom: 6 },
+  txRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.line },
+  txD: { fontFamily: FONT.body, fontSize: 12.5, color: C.sub, width: 96 },
+  txM: { fontFamily: FONT.body, fontSize: 12.5, color: C.ink, flex: 1 },
+  txE: { fontFamily: FONT.bold, fontSize: 12.5, color: C.ink, fontVariant: ["tabular-nums"] },
+  dim: { fontFamily: FONT.body, fontSize: 12, color: C.sub, marginTop: 4 },
   discRow: { marginTop: 16 },
-  discTxt: { fontFamily: "Figtree_600SemiBold", fontSize: 13, color: GREEN },
-  sql: { fontFamily: "Courier", fontSize: 10.5, color: SUB, marginTop: 8, lineHeight: 15 },
-  simBtn: { marginTop: 18, backgroundColor: GREEN, borderRadius: 12, paddingVertical: 12, alignItems: "center" },
-  simBtnTxt: { fontFamily: "Figtree_700Bold", fontSize: 14, color: "#FFFFFF" },
+  discTxt: { fontFamily: FONT.semi, fontSize: 13, color: C.green },
+  sql: { fontFamily: "Courier", fontSize: 10.5, color: C.sub, marginTop: 8, lineHeight: 15 },
+  simBtn: { marginTop: 18, backgroundColor: C.green, borderRadius: 12, paddingVertical: 12, alignItems: "center" },
+  simBtnTxt: { fontFamily: FONT.bold, fontSize: 14, color: "#FFFFFF" },
 });

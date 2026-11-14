@@ -1,6 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import { C, FONT } from "../theme";
+
 export function Placeholder({ title, note }: { title: string; note: string }) {
   return (
     <View style={styles.root}>
@@ -11,7 +13,7 @@ export function Placeholder({ title, note }: { title: string; note: string }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F4F6F2", padding: 20, paddingTop: 72 },
-  h: { fontFamily: "Figtree_700Bold", fontSize: 24, color: "#1F2A24" },
-  sub: { fontFamily: "Figtree_500Medium", fontSize: 13, color: "#5C6B62", marginTop: 6 },
+  root: { flex: 1, backgroundColor: C.paper, padding: 20, paddingTop: 72 },
+  h: { fontFamily: FONT.display, fontSize: 24, color: C.ink },
+  sub: { fontFamily: FONT.body, fontSize: 13, color: C.sub, marginTop: 6 },
 });

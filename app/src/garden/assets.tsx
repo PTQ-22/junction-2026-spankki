@@ -9,7 +9,8 @@
  * (fence post bases) lands at scene y≈554.
  */
 import React from "react";
-import { Ellipse, G, Image as SvgImage, Line, Rect, Text as SvgText } from "react-native-svg";
+import { Image as RNImage } from "react-native";
+import { Ellipse, G, Image as SvgImage, Line, Text as SvgText } from "react-native-svg";
 
 export type Variant = "sun" | "cloud" | "storm";
 export type FlowerSt = "dormant" | "wilting" | "ok" | "blooming";
@@ -72,12 +73,8 @@ function Art({ name, h, opacity = 1, x = 0 }: { name: string; h: number; opacity
   );
 }
 
-/** Subtle dark/cool veil over a sprite bbox in storm/cloud moods. */
-function Dim({ h, mood }: { h: number; mood: Variant }) {
-  const o = mood === "storm" ? 0.22 : mood === "cloud" ? 0.08 : 0;
-  if (!o) return null;
-  return <Rect x={-h * 0.45} y={-h} width={h * 0.9} height={h} fill="#2E4159" opacity={o} />;
-}
+/** Sprite-bbox veils drew visible rectangles around sprites — removed;
+ * mood now comes only from the scene-wide veil in GardenScene. */
 
 /* ---- flowers -------------------------------------------------------------- */
 const FLOWER_KEY: Record<string, string> = {
@@ -116,7 +113,6 @@ export function Taimi({ stage, mood }: { stage: number; mood: Variant }) {
   return (
     <G>
       <Art name={`taimi-${s}`} h={h} />
-      <Dim h={h} mood={mood} />
       {rain}
     </G>
   );
@@ -161,15 +157,15 @@ export function RailPlate({
   return (
     <G>
       <Art name="sign" h={90} />
-      <Dim h={90} mood={variant} />
-      {/* sign board occupies the top ~65% of the sprite */}
-      <SvgText x={0} y={-64} textAnchor="middle" fontSize={11.5} fontWeight="700" fill="#4A3B28">
+      {/* sign board occupies the top ~65% of the sprite; all text kept
+          small enough to stay inside the board */}
+      <SvgText x={0} y={-66} textAnchor="middle" fontSize={10} fontWeight="700" fill="#4A3B28">
         {`Rent ${rent} €`}
       </SvgText>
-      <SvgText x={0} y={-50} textAnchor="middle" fontSize={10} fontWeight="600" fill="#5E4B34">
+      <SvgText x={0} y={-53} textAnchor="middle" fontSize={8.6} fontWeight="600" fill="#5E4B34">
         {paid ? "paid" : "due"}
       </SvgText>
-      <SvgText x={0} y={-36} textAnchor="middle" fontSize={10} fontWeight="600" fill="#5E4B34">
+      <SvgText x={0} y={-41} textAnchor="middle" fontSize={8.6} fontWeight="600" fill="#5E4B34">
         {windowText}
       </SvgText>
     </G>
@@ -219,12 +215,10 @@ export function Pond({ level, variant }: { level: number; variant: Variant }) {
       />
     );
   };
-  const hiH = hi ? (ART[hi].h / ART[hi].w) * POND_W : 0;
   return (
     <G>
       {render(lo, 1)}
       {hi ? render(hi, mix) : null}
-      <Dim h={Math.max(hiH, 45)} mood={variant} />
     </G>
   );
 }
@@ -237,22 +231,45 @@ export function Weather({ kind }: { kind: Variant }) {
 }
 
 /* ---- backdrop: painted gouache scene ---------------------------------------- */
-/** SLOT: backdrop/{variant} — scene-space rect sized to cover the viewBox in
- * use, anchored so the fence post bases (img row ~925/1376) stay at scene y≈554. */
-export function Backdrop({ variant, vb }: { variant: Variant; vb?: { x: number; y: number; w: number; h: number } }) {
-  const v = vb ?? { x: 0, y: 60, w: 390, h: 844 };
+/** SLOT: backdrop/{variant} — rendered as a plain RN <Image> behind the Svg:
+ * react-native-svg's <Image> element fails to composite the very tall
+ * 1080×1935 PNG under the tight sim viewBox on iOS (renders a pale wash
+ * over part of the scene). The rect math is identical: image row ~1300
+ * (fence post bases, fraction 0.672) lands at scene y≈554. */
+export function backdropRect(v: { x: number; y: number; w: number; h: number }) {
   const FRACTION_POST_BASE = 0.672;
   const ASPECT = 1080 / 1935;
   const h = Math.max((v.y + v.h - 554) / (1 - FRACTION_POST_BASE), v.w / ASPECT);
   const w = h * ASPECT;
+  return { x: v.x + (v.w - w) / 2, y: 554 - FRACTION_POST_BASE * h, w, h };
+}
+
+export function Backdrop({
+  variant,
+  vb,
+  ox = 0,
+  oy = 0,
+  scale = 1,
+}: {
+  variant: Variant;
+  vb?: { x: number; y: number; w: number; h: number };
+  ox?: number;
+  oy?: number;
+  scale?: number;
+}) {
+  const v = vb ?? { x: 0, y: 60, w: 390, h: 844 };
+  const r = backdropRect(v);
   return (
-    <SvgImage
-      href={ART[`bg-${variant}`].src}
-      x={v.x + (v.w - w) / 2}
-      y={554 - FRACTION_POST_BASE * h}
-      width={w}
-      height={h}
-      preserveAspectRatio="xMidYMid meet"
+    <RNImage
+      source={ART[`bg-${variant}`].src}
+      style={{
+        position: "absolute",
+        left: ox + (r.x - v.x) * scale,
+        top: oy + (r.y - v.y) * scale,
+        width: r.w * scale,
+        height: r.h * scale,
+      }}
+      resizeMode="stretch"
     />
   );
 }
