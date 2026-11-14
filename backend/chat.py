@@ -375,7 +375,8 @@ def _templated(key: str, con, customer_id: str, state: dict, message: str = "") 
         norm = next((f["norm"] for f in state["flowers"] if f["flower"] == cat), 0)
         text = (
             f"I don't predict fun spending — that part stays your choice. "
-            f"You usually spend {_euro(norm)} a month on {cat.lower()}."
+            f"In this data, past trends call even the direction right only 52% of the time. "
+            f"What I can tell you: you usually spend {_euro(norm)} a month on {cat.lower()}."
         )
         return {"text": text, "tool": "predict", "receipts": {"count": 0, "rows": [], "sql": ""}, "action": None, "provider": "template"}
     if key == "taxi":
@@ -738,13 +739,15 @@ def _llm_answer(con, customer_id: str, state: dict, question: str, history: list
 
 
 def chat(con, customer_id: str, today: date, message: str, save_first_pct: float = 0.0, history: list | None = None) -> dict:
-    ck = (customer_id, today.isoformat(), save_first_pct, " ".join(str(message).lower().split()))
-    if not history and ck in _CACHE:
+    norm = lambda s: " ".join(str(s).lower().split())  # noqa: E731
+    hist_key = tuple((h.get("role"), norm(h.get("text", ""))) for h in history or [])
+    ck = (customer_id, today.isoformat(), save_first_pct, norm(message), hist_key)
+    if ck in _CACHE:
         return _CACHE[ck]
     state = garden_state(con, customer_id, today, save_first_pct)
     state["_today"] = today
     key = _route(message)
-    if key == "predict" and not history:
+    if key == "predict":
         # Taimi never forecasts fun spending — deterministic decline + usual amount
         out = _templated(key, con, customer_id, state, message)
         out["used_llm"] = False
@@ -764,6 +767,5 @@ def chat(con, customer_id: str, today: date, message: str, save_first_pct: float
                 "action": None,
                 "provider": "template",
             }
-    if not history:
-        _CACHE[ck] = out
+    _CACHE[ck] = out
     return out
