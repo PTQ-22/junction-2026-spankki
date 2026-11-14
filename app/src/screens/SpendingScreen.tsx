@@ -6,9 +6,10 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Image as SvgImage } from "react-native-svg";
 
-import { fetchGarden, GardenState } from "../api";
+import { Benchmarks, fetchBenchmarks } from "../api";
 import { FlowerSheet } from "../components/FlowerSheet";
 import { ART_SRC, Flower } from "../garden/assets";
+import { OfflineCard, useGarden } from "../offline";
 import { useDemo } from "../state";
 import { C, FONT, R, SHADOW } from "../theme";
 
@@ -62,17 +63,21 @@ const BASKETS: { k: "B1a" | "B1b" | "B2" | "B3"; name: string; note: string; gar
 ];
 
 export function SpendingScreen() {
-  const { persona, today, saveFirstPct } = useDemo();
-  const [g, setG] = useState<GardenState | null>(null);
+  const { persona, today } = useDemo();
+  const { g, offline, retry } = useGarden();
+  const [bm, setBm] = useState<Benchmarks | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
-    fetchGarden(persona, today, saveFirstPct).then((d) => live && setG(d)).catch(() => {});
+    fetchBenchmarks(persona, today).then((d) => live && setBm(d)).catch(() => {});
     return () => {
       live = false;
     };
-  }, [persona, today, saveFirstPct]);
+  }, [persona, today]);
+
+  const benchOf = (flower: string) =>
+    bm && bm.peers_count >= 30 ? bm.flowers.find((f) => f.flower === flower) : undefined;
 
   const fl = g?.flowers.find((f) => f.flower === sheet) ?? null;
   const total30 = g ? Object.values(g.baskets_last30).reduce((a, b) => a + b, 0) : 0;
@@ -81,8 +86,12 @@ export function SpendingScreen() {
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.pad}>
         <Text style={styles.h}>Where your money went</Text>
-        <Text style={styles.sub}>{`Last 30 days · ${g ? euro(total30) : "…"}`}</Text>
+        <Text style={styles.sub}>{`Last 30 days · ${g ? euro(total30) : offline ? "—" : "…"}`}</Text>
 
+        {offline ? (
+          <OfflineCard onRetry={retry} />
+        ) : (
+          <>
         {g && (
           <View style={styles.stack}>
             {BASKETS.map((b, i) => {
@@ -137,11 +146,19 @@ export function SpendingScreen() {
                 <Text style={styles.fnote}>
                   {`usual ${euro(f.norm)}/month · ${f.hours} h · ${WORD[st]}`}
                 </Text>
+                {benchOf(f.flower) != null && bm && (
+                  <Text style={styles.fpeer}>
+                    {`your age peers: ${euro(benchOf(f.flower)!.peers)}/mo`}
+                    {benchOf(f.flower)!.hbs != null ? ` · Finns ${bm.hbs.group}: ${euro(benchOf(f.flower)!.hbs!)}/mo` : ""}
+                  </Text>
+                )}
               </View>
             </Pressable>
           );
         })}
         {!g && <ActivityIndicator color={C.green} style={{ marginTop: 24 }} />}
+          </>
+        )}
       </ScrollView>
       <FlowerSheet flower={fl} customerId={persona} today={today} onClose={() => setSheet(null)} />
     </View>
@@ -180,4 +197,5 @@ const styles = StyleSheet.create({
   ftrkFill: { height: 5, borderRadius: 3 },
   fmark: { position: "absolute", top: -2, width: 2, height: 9, backgroundColor: C.ink, opacity: 0.5, borderRadius: 1 },
   fnote: { fontFamily: FONT.body, fontSize: 11.5, color: C.sub, marginTop: 5 },
+  fpeer: { fontFamily: FONT.body, fontSize: 10.5, color: C.faint, marginTop: 3 },
 });

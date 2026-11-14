@@ -16,6 +16,7 @@ import os
 import re
 from datetime import date
 
+from .benchmarks import BASKET_ORDER, FLOWER_ORDER, peer_benchmarks
 from .garden import garden_state
 from .simulate import simulate
 
@@ -292,6 +293,45 @@ def balance_overview(state: dict) -> dict:
     }
 
 
+_BASKET_ALIAS = {
+    "b1a": "B1a", "bills": "B1a", "rent": "B1a",
+    "b1b": "B1b", "essentials": "B1b", "everyday": "B1b", "groceries": "B1b",
+    "b2": "B2", "irregular": "B2", "pond": "B2", "buffer": "B2",
+    "b3": "B3", "fun": "B3", "leaks": "B3", "flowers": "B3",
+}
+
+
+def benchmark(con, customer_id: str, today: date, category: str | None = None) -> dict:
+    """You vs age peers (±5 y): median €/month over the last 6 complete months,
+    per fun flower or basket. category optional — omit for the full table."""
+    data = peer_benchmarks(con, customer_id, today)
+    base = {
+        "peers_count": data["peers_count"],
+        "peers": f"customers within ±{data['age_band']} years of your age",
+        "window": f"{data['window']['start']} to {data['window']['end']} (median €/month)",
+    }
+    if category is None or str(category).strip() == "":
+        return {**base, "flowers": data["flowers"], "baskets": data["baskets"]}
+    cl = str(category).strip()
+    b = _BASKET_ALIAS.get(cl.lower())  # basket words win: "fun"->B3, "bills"->B1a
+    if b:
+        row = next(r for r in data["baskets"] if r["basket"] == b)
+        return {**base, "basket": b,
+                "you_eur_month": row["me"], "peers_eur_month": row["peers"]}
+    canon, _ = _canon_category(con, cl)
+    if canon:
+        row = next((f for f in data["flowers"] if f["flower"] == canon), None)
+        if row:
+            return {**base, "category": canon,
+                    "you_eur_month": row["me"], "peers_eur_month": row["peers"]}
+        return {**base, "category": canon,
+                "note": "peer benchmarks exist only for fun categories "
+                        "(Restaurants, Entertainment, Lifestyle, Travel, Taxi) "
+                        "and baskets (B1a bills, B1b essentials, B2 irregular, B3 fun)"}
+    return {**base, "error": f"unknown benchmark category {category!r}",
+            "valid": FLOWER_ORDER + BASKET_ORDER}
+
+
 # -----------------------------------------------------------------------------
 
 
@@ -421,9 +461,10 @@ SYSTEM = (
     "No praise or judgement words (great job, bad, too much) — describe, don't grade. "
     "If a tool says there's nothing to trim, say so plainly. If asked to predict future "
     "fun/discretionary spending, say you don't predict it and give the usual amount instead. "
-    "If the question is outside this customer's own transactions (markets, other people, "
-    "advice on products), say what you can help with instead. Never give investment "
-    "product advice."
+    "If the question is outside this customer's own transactions (markets, advice on "
+    "products), say what you can help with instead — but for 'how do I compare to "
+    "others / people my age' questions, call benchmark and report both medians "
+    "without ranking or judgement. Never give investment product advice."
 )
 
 _PARAMS_SCHEMA = {
@@ -445,9 +486,10 @@ _TOOL_DESCS = {
     "simulate": "What-if: cut one fun category by a %, effect over 6 months. Use for cut/reduce/save questions.",
     "spender_profile": "Deterministic spending-profile label plus its stats. Use for 'what kind of spender am I'.",
     "category_breakdown": "Totals per category and per basket (bills, essentials, irregular, fun) for a period (month_offset: 0=last month, 1=the month before), each fun category with its usual monthly amount. Use for 'where does my money go' and overview questions.",
-    "compare_to_usual": "One category vs its usual: last-30d total, usual monthly norm (fun categories only), count, biggest transaction, weekend share. Use for 'why did I spend so much on X' or 'am I spending more on X'.",
+    "compare_to_usual": "One category vs its usual: last-30d total, usual monthly norm (fun categories only), count, biggest transaction, weekend share. Use for 'why did I spend so much on X' or 'am I spending more on X'. For comparisons to other people your age, use benchmark instead.",
     "bills_overview": "Rent amount and due window, monthly utilities, bills still due this cycle, next rent window. Use for rent/bill questions.",
     "balance_overview": "Account balance, savings pond fill/target, salary, payday window, investment total. Use for savings/balance/investment questions.",
+    "benchmark": "You vs people your age: your median €/month over the last 6 complete months vs the median of customers within ±5 years of your age. Optional category: a fun flower (Restaurants, Entertainment, Lifestyle, Travel, Taxi) or a basket (B1a bills, B1b everyday essentials, B2 irregular, B3 fun); omit for the full table. Use for 'how do I compare to others', 'people my age', 'is that normal' questions.",
 }
 
 _ROUNDS = 3
@@ -465,6 +507,7 @@ def _make_tools(con, customer_id: str, state: dict) -> dict:
         "compare_to_usual": lambda category="Restaurants": compare_to_usual(con, customer_id, today, state, category),
         "bills_overview": lambda: bills_overview(state),
         "balance_overview": lambda: balance_overview(state),
+        "benchmark": lambda category=None: benchmark(con, customer_id, today, category),
     }
 
 

@@ -10,6 +10,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from .benchmarks import peer_benchmarks
 from .chat import chat, list_transactions
 from .db import DB_PATH, build, connect, customer_exists
 from .garden import garden_state
@@ -84,6 +85,16 @@ def transactions(
 ):
     _customer_or_404(con, customer_id)
     return list_transactions(con, customer_id, today, flower=flower, period=f"last_{days}d", limit=limit)
+
+
+@app.get("/api/customers/{customer_id}/benchmarks")
+def benchmarks(
+    customer_id: str,
+    today: date = date(2026, 9, 15),
+    con: duckdb.DuckDBPyConnection = Depends(get_con),
+):
+    _customer_or_404(con, customer_id)
+    return peer_benchmarks(con, customer_id, today)
 
 
 class SimulateBody(BaseModel):

@@ -1,0 +1,7 @@
+{
+  "source": "Statistics Finland, Household Budget Survey 2022 (statfin_ktutk_14q4.px), CC BY 4.0",
+  "unit": "EUR per month per consumption unit, current 2022 prices",
+  "note": "Per consumption unit (OECD-equivalent), not per person. Dataset categories are mapped to COICOP groups.",
+  "age_17_24": {"Groceries": 181, "Transportation": 185, "Housing+Utilities": 540, "Health": 45, "Entertainment": 81, "Restaurants": 67, "Lifestyle": 151, "Travel": 7},
+  "age_25_34": {"Groceries": 261, "Transportation": 301, "Housing+Utilities": 664, "Health": 46, "Entertainment": 143, "Restaurants": 112, "Lifestyle": 236, "Travel": 7}
+}

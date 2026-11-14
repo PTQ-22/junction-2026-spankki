@@ -171,3 +171,20 @@ export async function fetchGarden(
   if (!r.ok) throw new Error(`garden ${r.status}`);
   return r.json();
 }
+
+export interface Benchmarks {
+  id: string;
+  today: string;
+  window: { start: string; end: string };
+  age_band: number;
+  peers_count: number;
+  hbs: { group: string; source: string; unit: string };
+  flowers: { flower: string; me: number; peers: number; hbs: number | null }[];
+  baskets: { basket: string; me: number; peers: number; hbs: number | null }[];
+}
+
+export async function fetchBenchmarks(customerId: string, today: string): Promise<Benchmarks> {
+  const r = await fetch(`${BASE}/api/customers/${customerId}/benchmarks?today=${today}`);
+  if (!r.ok) throw new Error(`benchmarks ${r.status}`);
+  return r.json();
+}
