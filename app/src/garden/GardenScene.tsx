@@ -92,10 +92,13 @@ export function simViewBox(w: number, h: number): VB {
 export function embedViewBox(w: number, h: number): VB {
   const vhFit = Math.round((h * 390) / Math.max(1, w));
   if (vhFit >= 740) return VB_DEF;
-  // vh rows: heads(415) → pond(715) is 300 + 125 sky for the header band;
-  // capped by the window's own fit so the pond never gets cropped
-  const vh = Math.min(425, vhFit);
-  return { x: 0, y: 715 - vh, w: 390, h: vh };
+  // slightly wider than the painted scene (x −22 → 412) so flower tags and
+  // the fence get real margins instead of clipping at the screen edges;
+  // height follows the window so the pond is never cropped and the top keeps
+  // ~120+ pt of sky for the floating header
+  const VW = 434;
+  const vh = Math.round((h * VW) / Math.max(1, w));
+  return { x: -22, y: 715 - vh, w: VW, h: vh };
 }
 
 /** xMidYMid slice mapping for a given viewBox. */

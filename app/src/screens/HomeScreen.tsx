@@ -592,13 +592,14 @@ export function HomeScreen() {
                   : "left for fun until payday"}
               </Text>
               <Text style={[styles.headNum, { color: hInk }]}>{g.left_cycle <= 0 ? `0${NBSP}€` : euro(g.left_cycle)}</Text>
-              <Text style={[styles.headSub, { color: hSub }]}>
-                {g.left_cycle <= 0
-                  ? `Still on your account: ${euro(g.balance)}.`
-                  : g.days_to_payday <= 1
+              {/* balance lives on the S-Tili card above — no need to repeat it */}
+              {g.left_cycle > 0 && (
+                <Text style={[styles.headSub, { color: hSub }]}>
+                  {g.days_to_payday <= 1
                     ? "Payday is due today."
                     : `≈ ${euro(g.safe_today)}/day · payday in ~${g.days_to_payday} days`}
-              </Text>
+                </Text>
+              )}
             </>
           )
         ) : (
