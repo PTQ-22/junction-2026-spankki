@@ -32,3 +32,6 @@ experiments/exa_feasibility.py
 experiments/exa_history_freshness.py
 experiments/food_poznan.py
 experiments/food_tonight.py
+
+# Raw image-model outputs (local only; final assets are in app/assets/garden)
+prototype/art/raw/
