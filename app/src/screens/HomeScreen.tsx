@@ -22,11 +22,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { fetchGarden, fetchSimulate, GardenState, SimResult } from "../api";
+import { fetchSimulate, GardenState, SimResult } from "../api";
 import { FlowerSheet } from "../components/FlowerSheet";
 import { ObjectSheet, ObjKind } from "../components/ObjectSheet";
 import { Legend } from "../components/Intro";
 import { flowerHead, flowerIndex, GardenScene, POCKET_POS, POND_POS, sceneXY, simViewBox } from "../garden/GardenScene";
+import { OfflineCard, useGarden } from "../offline";
 import { useDemo } from "../state";
 import { C, FONT, R, SHADOW } from "../theme";
 
@@ -248,8 +249,7 @@ export function HomeScreen() {
     month?: string;
     autoplay?: string;
   }>();
-  const [g, setG] = useState<GardenState | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const { g, offline, retry } = useGarden();
   const [sheet, setSheet] = useState<string | null>(null);
   const [objSheet, setObjSheet] = useState<ObjKind | null>(null);
   const [legend, setLegend] = useState(false);
@@ -259,6 +259,7 @@ export function HomeScreen() {
   const [cut, setCut] = useState(0.2);
   const [cutApplied, setCutApplied] = useState(0.2);
   const [sim, setSim] = useState<SimResult | null>(null);
+  const [simErr, setSimErr] = useState(false);
   const [month, setMonth] = useState(0); // 0 = Today … months
   const [playing, setPlaying] = useState(false);
   const [pondLv, setPondLv] = useState(0);
@@ -305,16 +306,7 @@ export function HomeScreen() {
     enterSim(cat, isNaN(c) ? 0.2 : Math.min(0.5, Math.max(0, c)), m, params.autoplay === "1");
   }, [params.sim, params.category, params.cut, params.month, params.autoplay, g]);
 
-  useEffect(() => {
-    let live = true;
-    setErr(null);
-    fetchGarden(persona, today, saveFirstPct)
-      .then((d) => live && setG(d))
-      .catch((e) => live && setErr(String(e)));
-    return () => {
-      live = false;
-    };
-  }, [persona, today, saveFirstPct]);
+  // garden fetch lives in useGarden() (shared offline path + retry)
 
   // debounce the slider so we don't spam /simulate
   useEffect(() => {
@@ -327,8 +319,13 @@ export function HomeScreen() {
     if (!simMode || !simCat || !g) return;
     let live = true;
     fetchSimulate(persona, today, simCat, cutApplied, saveFirstPct)
-      .then((d) => live && setSim(d))
-      .catch(() => {});
+      .then((d) => {
+        if (live) {
+          setSim(d);
+          setSimErr(false);
+        }
+      })
+      .catch(() => live && setSimErr(true));
     return () => {
       live = false;
     };
@@ -406,6 +403,7 @@ export function HomeScreen() {
     setCut(c);
     setCutApplied(c);
     setSim(null);
+    setSimErr(false);
     setReqTick((t) => t + 1);
     setMonth(m0);
     prevMonth.current = m0;
@@ -420,9 +418,16 @@ export function HomeScreen() {
     tw.stopAll();
     setSimCat(null);
     setSim(null);
+    setSimErr(false);
     setMonth(0);
     setCoins([]);
     setFloats([]);
+  };
+
+  const retrySim = () => {
+    setSimErr(false);
+    setSim(null);
+    setReqTick((t) => t + 1);
   };
 
   const selectCat = (name: string) => {
@@ -430,6 +435,7 @@ export function HomeScreen() {
     setPlaying(false);
     setSimCat(name);
     setSim(null);
+    setSimErr(false);
     setReqTick((t) => t + 1);
     setMonth(0);
     prevMonth.current = 0;
@@ -508,7 +514,7 @@ export function HomeScreen() {
           <GardenScene g={g} onFlowerPress={onFlowerPress} onObjectPress={onObjectPress} labels sim={simVisual} />
         ) : (
           <View style={styles.loading}>
-            {err ? <Text style={styles.err}>{err}</Text> : <ActivityIndicator color={C.green} />}
+            {offline ? <OfflineCard onRetry={retry} /> : <ActivityIndicator color={C.green} />}
           </View>
         )}
         {coins.map((c) => (
@@ -538,7 +544,11 @@ export function HomeScreen() {
             </Text>
             <Text style={[styles.headNum, { color: hInk }]}>{`+${euro(dispCount)}`}</Text>
             <Text style={[styles.headSub, { color: hSub }]}>
-              {sim ? `in 6 months · ${sim.hours} h of your work` : "asking the garden…"}
+              {sim
+                ? `in 6 months · ${sim.hours} h of your work`
+                : simErr
+                  ? "can't reach the garden"
+                  : "asking the garden…"}
             </Text>
           </>
         ) : g ? (
@@ -567,19 +577,31 @@ export function HomeScreen() {
             </>
           )
         ) : (
-          <Text style={[styles.headline, { color: hInk }]}>{err ? "The garden is resting" : "Your garden"}</Text>
+          <Text style={[styles.headline, { color: hInk }]}>{offline ? "The garden is resting" : "Your garden"}</Text>
         )}
       </View>
 
       {/* bottom panel — flush on the tab bar */}
       {g && simMode ? (
         <View style={styles.panel}>
+          {simErr ? (
+            <>
+              <OfflineCard onRetry={retrySim} />
+              <View style={styles.actions}>
+                <View style={{ flex: 1 }} />
+                <Pressable style={styles.ghost} onPress={exitSim}>
+                  <Text style={styles.ghostTxt}>Done</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : (
+            <>
           {/* Step 1 · pick a habit */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={{ flexGrow: 0 }}
-            contentContainerStyle={{ gap: 8 }}
+            contentContainerStyle={{ gap: 8, paddingRight: 12 }}
           >
             {g.flowers
               .filter((f) => f.norm > 0)
@@ -603,8 +625,15 @@ export function HomeScreen() {
           <Text style={styles.cutSub}>
             {`Spend ${Math.round(cut * 100)}% less → ~${euro((sim?.norm ?? 0) * (1 - cut))}/month instead of ${euro(sim?.norm ?? 0)}`}
           </Text>
-          {/* Step 3 · scrub the months */}
-          <View style={styles.scrub}>
+          {/* Step 3 · scrub the months — horizontal scroll so the last
+              chip (Mar) is always reachable; right padding keeps it clear
+              of the panel edge */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.scrubScroll}
+            contentContainerStyle={styles.scrubRow}
+          >
             {["Today", ...(sim?.month_labels ?? [])].map((lbl, i) => (
               <Pressable
                 key={lbl}
@@ -617,7 +646,7 @@ export function HomeScreen() {
                 <Text style={[styles.scrubTxt, month === i && styles.scrubTxtOn]}>{lbl}</Text>
               </Pressable>
             ))}
-          </View>
+          </ScrollView>
           <View style={styles.actions}>
             <Pressable
               style={[styles.cta, playing && { opacity: 0.6 }]}
@@ -648,6 +677,8 @@ export function HomeScreen() {
           <Text style={styles.honest} numberOfLines={1}>
             Based on your usual spending — fun spending is your choice.
           </Text>
+            </>
+          )}
         </View>
       ) : g && note ? (
         <View style={styles.panel}>
@@ -740,7 +771,6 @@ const styles = StyleSheet.create({
   headSub: { fontFamily: FONT.body, fontSize: 13, color: C.sub, marginTop: 3 },
   sceneWrap: { flex: 1 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  err: { color: C.ink, fontFamily: FONT.body },
   help: {
     position: "absolute",
     top: 10,
@@ -835,9 +865,11 @@ const styles = StyleSheet.create({
   sliderRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 8 },
   cutLbl: { fontFamily: FONT.bold, fontSize: 13, color: C.ink, width: 48, textAlign: "right" },
   cutSub: { fontFamily: FONT.body, fontSize: 11, color: C.sub, marginTop: 1 },
-  scrub: { flexDirection: "row", gap: 4, marginTop: 8 },
+  scrubScroll: { flexGrow: 0, marginTop: 8 },
+  scrubRow: { flexDirection: "row", gap: 4, paddingRight: 20 },
   scrubItem: {
-    flex: 1,
+    minWidth: 44,
+    paddingHorizontal: 8,
     borderRadius: 8,
     paddingVertical: 4,
     alignItems: "center",

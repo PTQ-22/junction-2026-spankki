@@ -5,28 +5,76 @@ import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { fetchPersonas, Persona } from "../api";
+import { OfflineCard } from "../offline";
 import { useDemo } from "../state";
 
 import { C, FONT, R, SHADOW } from "../theme";
 
 const TODAYS = ["2026-09-15", "2026-09-01", "2026-08-15", "2026-06-15"];
 const SAVE_PCTS = [0, 0.05, 0.1];
+/** "One promise" commitment — 1% of every payday (Save More Tomorrow). */
+const PROMISE_PCT = 0.01;
 
 export function ProfileScreen() {
   const demo = useDemo();
   const [personas, setPersonas] = useState<Persona[]>([]);
+  const [personasErr, setPersonasErr] = useState(false);
+  const [personasTick, setPersonasTick] = useState(0);
 
   useEffect(() => {
-    fetchPersonas().then(setPersonas).catch(() => {});
-  }, []);
+    let live = true;
+    setPersonasErr(false);
+    fetchPersonas()
+      .then((d) => live && setPersonas(d))
+      .catch(() => live && setPersonasErr(true));
+    return () => {
+      live = false;
+    };
+  }, [personasTick]);
+
+  /** ON locks save_first_pct to 1%; OFF restores whatever was set before. */
+  const togglePromise = () => {
+    if (demo.promiseOn) {
+      demo.setSaveFirstPct(demo.prevSavePct);
+      demo.setPromiseOn(false);
+    } else {
+      demo.setPrevSavePct(demo.saveFirstPct === PROMISE_PCT ? 0 : demo.saveFirstPct);
+      demo.setPromiseOn(true);
+      demo.setSaveFirstPct(PROMISE_PCT);
+    }
+  };
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <Text style={styles.h}>Profile</Text>
 
       <Text style={styles.label}>Your settings</Text>
+
+      {/* One promise — Save More Tomorrow: one commitment, not a slider. */}
+      <View style={styles.promiseCard}>
+        <View style={styles.promiseText}>
+          <Text style={styles.promiseTitle}>One promise</Text>
+          <Text style={styles.promiseBody}>Save 1% of every payday automatically.</Text>
+          <Text style={styles.promiseSub}>
+            The garden grows a little each payday — you won't feel it.
+          </Text>
+        </View>
+        <Pressable
+          onPress={togglePromise}
+          accessibilityRole="button"
+          accessibilityState={{ checked: demo.promiseOn }}
+          accessibilityLabel="Save 1% of every payday automatically"
+          style={[styles.switchTrk, demo.promiseOn && styles.switchTrkOn]}
+        >
+          <View style={[styles.switchKnob, demo.promiseOn && styles.switchKnobOn]} />
+        </Pressable>
+      </View>
+
       <Text style={styles.sub2}>Save first — a slice of each salary set aside before your fun budget is calculated.</Text>
-      <View style={styles.seg}>
+      <View
+        style={[styles.seg, demo.promiseOn && { opacity: 0.4 }]}
+        pointerEvents={demo.promiseOn ? "none" : "auto"}
+      >
         {SAVE_PCTS.map((v) => (
           <Pressable
             key={v}
@@ -39,6 +87,11 @@ export function ProfileScreen() {
           </Pressable>
         ))}
       </View>
+      {demo.promiseOn && (
+        <Text style={styles.lockNote}>
+          Locked while your promise is on — 1% is set for you. Turn the promise off to adjust manually.
+        </Text>
+      )}
 
       <Pressable style={styles.introBtn} onPress={() => demo.setIntroSeen(false)}>
         <Text style={styles.introTxt}>Show intro again</Text>
@@ -57,7 +110,12 @@ export function ProfileScreen() {
           <Text style={[styles.rowTxt, demo.persona === p.id && styles.rowTxtOn]}>{p.label}</Text>
         </Pressable>
       ))}
-      {personas.length === 0 && <Text style={styles.dim}>API offline — {demo.persona} stays.</Text>}
+      {personas.length === 0 &&
+        (personasErr ? (
+          <OfflineCard onRetry={() => setPersonasTick((t) => t + 1)} />
+        ) : (
+          <Text style={styles.dim}>API offline — {demo.persona} stays.</Text>
+        ))}
 
       <Text style={styles.subLbl}>“Today” in the demo</Text>
       <View style={styles.seg}>
@@ -88,7 +146,40 @@ const styles = StyleSheet.create({
     marginTop: 22,
     marginBottom: 6,
   },
-  sub2: { fontFamily: FONT.body, fontSize: 12.5, color: C.sub, lineHeight: 18, marginBottom: 10 },
+  sub2: { fontFamily: FONT.body, fontSize: 12.5, color: C.sub, lineHeight: 18, marginBottom: 10, marginTop: 14 },
+  promiseCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: C.card,
+    borderRadius: R.card,
+    padding: 14,
+    marginBottom: 4,
+    ...SHADOW,
+  },
+  promiseText: { flex: 1 },
+  promiseTitle: { fontFamily: FONT.display, fontSize: 17, color: C.ink },
+  promiseBody: { fontFamily: FONT.semi, fontSize: 13, color: C.ink, marginTop: 3 },
+  promiseSub: { fontFamily: FONT.body, fontSize: 12, color: C.sub, lineHeight: 17, marginTop: 4 },
+  // switch styled like the sim controls: sage track, white knob, green when on
+  switchTrk: {
+    width: 46,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: C.sageSoft,
+    justifyContent: "center",
+    padding: 3,
+  },
+  switchTrkOn: { backgroundColor: C.green },
+  switchKnob: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#FFFFFF",
+    ...SHADOW,
+  },
+  switchKnobOn: { alignSelf: "flex-end" },
+  lockNote: { fontFamily: FONT.body, fontSize: 11.5, color: C.faint, marginTop: 8 },
   subLbl: { fontFamily: FONT.semi, fontSize: 12.5, color: C.ink, marginTop: 14, marginBottom: 8 },
   introBtn: {
     marginTop: 16,

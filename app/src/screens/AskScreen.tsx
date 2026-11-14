@@ -20,8 +20,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Svg from "react-native-svg";
 
-import { ChatReply, fetchChat, fetchGarden, GardenState } from "../api";
+import { ChatReply, fetchChat, GardenState } from "../api";
 import { Taimi } from "../garden/assets";
+import { OfflineCard, useGarden } from "../offline";
 import { useDemo } from "../state";
 
 import { C, FONT, R, SHADOW } from "../theme";
@@ -52,7 +53,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ q?: string }>();
-  const [g, setG] = useState<GardenState | null>(null);
+  const { g, offline, retry } = useGarden();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
@@ -62,16 +63,12 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
   const input = useRef<React.ComponentRef<typeof TextInput>>(null);
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
+  // greeting resets whenever the (re)fetched garden arrives — useGarden owns
+  // the fetch, the offline flag and retry
   useEffect(() => {
     lastQ.current = null;
-    setMsgs([]);
-    fetchGarden(persona, today, saveFirstPct)
-      .then((d) => {
-        setG(d);
-        setMsgs([{ role: "taimi", text: greeting(d) }]);
-      })
-      .catch(() => {});
-  }, [persona, today, saveFirstPct]);
+    setMsgs(g ? [{ role: "taimi", text: greeting(g) }] : []);
+  }, [g]);
 
   const ask = (q: string) => {
     const text = q.trim();
@@ -84,7 +81,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
     setBusy(true);
     fetchChat(persona, today, text, saveFirstPct, history)
       .then((r) => setMsgs((m) => [...m, { role: "taimi", text: r.text, receipts: r.receipts, action: r.action, provider: r.provider }]))
-      .catch(() => setMsgs((m) => [...m, { role: "taimi", text: "The garden is quiet — try again in a moment." }]))
+      .catch(() => setMsgs((m) => [...m, { role: "taimi", text: "I can't reach Taimi right now — the coach service isn't running. Try again in a moment." }]))
       .finally(() => setBusy(false));
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 150);
   };
@@ -124,6 +121,7 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
         contentContainerStyle={{ padding: 14, paddingBottom: 8 }}
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
       >
+        {offline && <OfflineCard onRetry={retry} />}
         {msgs.map((m, i) => (
           <View key={i}>
             {m.role === "taimi" ? (

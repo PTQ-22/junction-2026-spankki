@@ -273,7 +273,10 @@ export function GardenScene({
         if (sim && sim.selected !== f.flower) return null;
         const name = FLOWER_SHORT[f.flower] ?? f.flower;
         const w = name.length * 5.8 + 12;
-        const y = i % 2 === 0 ? 588 : 604;
+        // tag hugs the flower's own base — the sim-selected flower is raised
+        // to y=560, so its tag sits at 573 instead of the staggered rows
+        const sel = sim?.selected === f.flower;
+        const y = sel ? 573 : i % 2 === 0 ? 588 : 604;
         return (
           <G key={`tag-${f.flower}`} opacity={0.9}>
             <Rect x={FX[i] - w / 2} y={y} width={w} height={13} rx={6.5} fill="#FFFFFF" opacity={0.78} />
