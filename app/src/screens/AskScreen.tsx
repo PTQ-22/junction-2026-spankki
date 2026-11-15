@@ -248,10 +248,10 @@ export function AskScreen({ embedded = false }: { embedded?: boolean }) {
 function greeting(g: GardenState): string {
   if (g.storm) {
     const rw = g.next_rent_window;
-    return `Heads-up — rent ~${rw.d0}–${rw.d1} ${rw.month} won't fit this cycle, but the pond covers it. What would you like to know?`;
+    return `Heads-up — rent ~${rw.d0}–${rw.d1} ${rw.month} won't fit this cycle. Ask me what's safe to spend until payday.`;
   }
   if (g.left_cycle <= 0)
-    return `Your fun budget is used up — the pond is safe at ${g.balance} € though. What would you like to know?`;
+    return `Your fun budget is used up this cycle — your account still has ${g.balance} € and the pond holds ${g.pond_fill} €. What would you like to know?`;
   return `${g.left_cycle} € left until payday — about ${g.safe_today} €/day. ${
     g.pond_target > 0 && g.pond_fill >= g.pond_target ? `Your pond is full at ${g.pond_fill} €.` : "Your pond is filling."
   } What would you like to know?`;

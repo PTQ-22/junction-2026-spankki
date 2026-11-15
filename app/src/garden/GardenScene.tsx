@@ -232,7 +232,14 @@ export function GardenScene({
       }}
     >
       {sz && <Backdrop variant={v} vb={vb} ox={ox} oy={oy} scale={scale} />}
-      <Svg viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+      <Svg
+        viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+        preserveAspectRatio="xMidYMid slice"
+        width="100%"
+        height="100%"
+        style={{ position: "relative" }}
+        fontFamily="Figtree_700Bold"
+      >
       <Defs>
         <RadialGradient id="selGlow" cx="50%" cy="50%" rx="50%" ry="50%" fx="50%" fy="50%">
           <Stop offset="0" stopColor="#FFE0A0" stopOpacity="0.7" />
